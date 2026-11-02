@@ -95,7 +95,7 @@ services:
       - app-data:/data
     depends_on:
       keycloak:
-        condition: service_started
+        condition: service_healthy
       padron-mock:
         condition: service_healthy
     restart: unless-stopped
