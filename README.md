@@ -57,8 +57,6 @@ Editar `.env` antes de iniciar:
 
 - Reemplazar los valores `cambiar-esto` por secretos propios y robustos.
 - Mantener `PUBLIC_HOST=localhost` para usar todo desde la misma computadora.
-- Definir `COMPOSE_PROJECT_NAME=red-barrial`. Los scripts de respaldo y
-  restauración esperan que los volúmenes de Docker tengan ese prefijo.
 
 Luego, desde la raíz del repositorio:
 
@@ -80,17 +78,32 @@ salvo que se quieran eliminar también esos datos.
 
 | Servicio | URL | Acceso |
 |---|---|---|
-| Aplicación | http://localhost:8000 | Inicio y panel web |
-| Keycloak, login | http://localhost:8080 | Login del realm; la ruta `/admin` está bloqueada en este puerto |
-| Consola de administración de Keycloak | http://localhost:8081 | Sólo accesible desde la computadora que ejecuta Docker |
+| Inicio de la aplicación | http://localhost:8000/ | Página pública; desde allí se inicia sesión |
+| Inicio de sesión OIDC | http://localhost:8000/oidc/authenticate/ | Inicia el redireccionamiento a Keycloak |
+| Panel de la aplicación | http://localhost:8000/panel/ | Requiere iniciar sesión; muestra usuario y roles |
+| Retorno OIDC | http://localhost:8000/oidc/callback/ | URL de retorno de Keycloak; no abrir manualmente |
+| Cierre de sesión OIDC | http://localhost:8000/oidc/logout/ | Se envía mediante el formulario de cierre de sesión de la aplicación |
+| Consola de administración de Keycloak | http://localhost:8081/admin/ | Sólo accesible desde la computadora que ejecuta Docker; credenciales de administrador de `.env` |
+| Cuenta del realm en Keycloak | http://localhost:8080/realms/red-barrial/account/ | Acceso a la cuenta del usuario del realm |
+| Configuración OIDC del realm | http://localhost:8080/realms/red-barrial/.well-known/openid-configuration | Documento JSON para comprobar que el realm responde |
 | Swagger UI del padrón simulado | http://localhost:8001/docs | Sólo accesible desde la computadora que ejecuta Docker |
 | Redoc del padrón simulado | http://localhost:8001/redoc | Sólo accesible desde la computadora que ejecuta Docker |
+| Salud del padrón simulado | http://localhost:8001/health | Responde `{"status":"ok"}` |
+| Lista de comedores de prueba | http://localhost:8001/comedores | API de ejemplo; puede demorar o responder HTTP 503 |
+| Consulta de comedor de prueba | http://localhost:8001/comedores/CP-001 | API de ejemplo; puede demorar o responder HTTP 503 |
 
 El realm `red-barrial` y el cliente OIDC `red-barrial-web` se importan al
 iniciar Keycloak. No se crean usuarios automáticamente: hay que dar de alta
 las cuentas y asignarles los roles del realm desde la consola administrativa.
 Al iniciar sesión, el panel muestra el usuario y sus roles; todavía no hay
 pantallas de negocio con permisos por rol.
+
+Para comprobar el flujo principal, abrir `/`, iniciar sesión desde el botón
+**Ingresar con Keycloak** y verificar que se vuelve al panel en `/panel/`.
+Asignar previamente un rol al usuario desde la consola de administración para
+verlo reflejado en el panel. El padrón es un servicio independiente: sus
+endpoints permiten probar el mock, pero todavía no están conectados a la
+aplicación.
 
 ## Uso desde otras computadoras de la red
 
@@ -112,7 +125,6 @@ limitados al equipo servidor.
 | Variable | Uso |
 |---|---|
 | `PUBLIC_HOST` | Host público de la aplicación en la red local; por defecto, `localhost`. |
-| `COMPOSE_PROJECT_NAME` | Nombre del proyecto Compose; usar `red-barrial` para que los scripts encuentren los volúmenes de datos. |
 | `KEYCLOAK_VERSION` | Versión de la imagen de Keycloak; por defecto, `26.0`. |
 | `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD` | Usuario y contraseña iniciales del administrador de Keycloak. |
 | `OIDC_CLIENT_SECRET` | Secreto del cliente OIDC; debe coincidir entre la configuración de Keycloak y Django. |
@@ -150,8 +162,10 @@ bash scripts/restore.sh backups/AAAAMMDD-HHMMSS
 El respaldo copia SQLite en caliente y detiene Keycloak brevemente para copiar
 sus datos H2. Se conservan los últimos 14 respaldos. La restauración reemplaza
 los datos actuales, solicita confirmación y vuelve a iniciar los servicios.
-Antes de ejecutar cualquiera de los dos scripts, verificar que
-`COMPOSE_PROJECT_NAME=red-barrial` esté definido en `.env`.
+Ambos scripts detectan los volúmenes montados por la instancia Compose de este
+directorio, por lo que no dependen de que el proyecto se llame `red-barrial`.
+También aceptan `docker compose` o `docker-compose`. Antes de ejecutarlos,
+iniciá los servicios desde la raíz del repositorio.
 
 ## Estructura del repositorio
 
