@@ -30,7 +30,7 @@ pruebas automatizadas.
 | Componente | Tecnología y responsabilidad |
 |---|---|
 | Aplicación web | Django 5.1+, Python 3.12, Gunicorn y plantillas renderizadas en el servidor. |
-| Identidad | Keycloak 26 por OIDC; un proxy Nginx bloquea la consola administrativa en el puerto de login. |
+| Identidad | Keycloak 26 por OIDC; un inicializador corrige los permisos del volumen de datos antes del arranque y un proxy Nginx bloquea la consola administrativa en el puerto de login. |
 | Persistencia | SQLite en modo WAL para Django; H2 en archivo para Keycloak. Ambos datos viven en volúmenes Docker. |
 | Padrón simulado | FastAPI y Uvicorn; expone endpoints REST con demoras y fallas configurables. |
 | Orquestación | Docker Compose inicia la aplicación, Keycloak, su proxy y el mock. |
@@ -64,8 +64,9 @@ Luego, desde la raíz del repositorio:
 docker compose up -d --build
 ```
 
-La aplicación ejecuta las migraciones y recopila los archivos estáticos al
-iniciar. Para detener los servicios:
+Compose inicializa automáticamente los permisos del volumen de Keycloak antes
+de iniciar el servicio. La aplicación ejecuta las migraciones y recopila los
+archivos estáticos al iniciar. Para detener los servicios:
 
 ```powershell
 docker compose down

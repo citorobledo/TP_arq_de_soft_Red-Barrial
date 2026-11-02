@@ -1,9 +1,20 @@
 version: "3.8"
 services:
+  keycloak-data-permissions:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["sh", "-c", "chown -R 1000:0 /data && chmod -R u+rwX /data"]
+    volumes:
+      - keycloak-data:/data
+    restart: "no"
+
   keycloak:
     image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.0}
     # start-dev usa H2 en archivo: válido para entorno local, no para producción.
     command: ["start-dev", "--import-realm"]
+    depends_on:
+      keycloak-data-permissions:
+        condition: service_completed_successfully
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?definir KEYCLOAK_ADMIN_PASSWORD en .env}
