@@ -1,0 +1,5 @@
+# Fijar versiones exactas al generar el proyecto Django.
+Django>=5.1,<6
+gunicorn>=22
+whitenoise>=6.7
+mozilla-django-oidc>=4.0

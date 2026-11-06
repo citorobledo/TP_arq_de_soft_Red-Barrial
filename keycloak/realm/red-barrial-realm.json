@@ -1,0 +1,28 @@
+{
+  "realm": "red-barrial",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "voluntario_deposito", "description": "Registra ingresos y entregas" },
+      { "name": "referente_comedor", "description": "Confirma lo recibido" },
+      { "name": "coordinador", "description": "Ve todo y exporta reportes" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "red-barrial-web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${OIDC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["${APP_PUBLIC_URL}/*"],
+      "webOrigins": ["${APP_PUBLIC_URL}"],
+      "attributes": { "post.logout.redirect.uris": "${APP_PUBLIC_URL}/*" }
+    }
+  ]
+}

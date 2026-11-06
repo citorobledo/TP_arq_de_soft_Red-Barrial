@@ -1,0 +1,13 @@
+:root { --fondo:#f6f7f5; --texto:#1f2a24; --marca:#2f6b4f; --borde:#d5dad6; }
+* { box-sizing: border-box; }
+body { margin:0; font:16px/1.5 system-ui, sans-serif; background:var(--fondo); color:var(--texto); }
+header { display:flex; justify-content:space-between; align-items:center; padding:.75rem 1.5rem; background:#fff; border-bottom:1px solid var(--borde); }
+header nav, header form { display:flex; align-items:center; gap:.75rem; margin:0; }
+.marca { font-weight:600; color:var(--marca); text-decoration:none; }
+main { max-width:720px; margin:2rem auto; padding:0 1.5rem; }
+.boton, button { display:inline-block; padding:.5rem 1rem; border:0; border-radius:6px; background:var(--marca); color:#fff; font:inherit; text-decoration:none; cursor:pointer; }
+button.secundario { background:transparent; color:var(--marca); border:1px solid var(--marca); }
+dl { display:grid; grid-template-columns:8rem 1fr; gap:.5rem 1rem; }
+dt { font-weight:600; } dd { margin:0; }
+.etiqueta { display:inline-block; padding:.1rem .6rem; margin-right:.4rem; border:1px solid var(--borde); border-radius:999px; background:#fff; font-size:.9rem; }
+.aviso { padding:.75rem 1rem; border-left:4px solid #c08a1d; background:#fff7e0; }

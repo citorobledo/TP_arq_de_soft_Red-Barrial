@@ -1,0 +1,105 @@
+version: "3.8"
+services:
+  keycloak-data-permissions:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["sh", "-c", "chown -R 1000:0 /data && chmod -R u+rwX /data"]
+    volumes:
+      - keycloak-data:/data
+    restart: "no"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.0}
+    # start-dev usa H2 en archivo: válido para entorno local, no para producción.
+    command: ["start-dev", "--import-realm"]
+    depends_on:
+      keycloak-data-permissions:
+        condition: service_completed_successfully
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?definir KEYCLOAK_ADMIN_PASSWORD en .env}
+      # URL pública (la que usa el navegador). El emisor (iss) de los tokens usa este valor.
+      KC_HOSTNAME: http://${PUBLIC_HOST:-localhost}:8080
+      # Permite que la app acceda por http://keycloak:8080 sin romper el hostname público.
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # Consola de administración: solo desde localhost del servidor (ADR-14).
+      KC_HOSTNAME_ADMIN: http://localhost:8081
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_KC_HEAP: -Xms256m -Xmx768m
+      # Variables usadas como ${...} dentro del realm importado.
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?definir OIDC_CLIENT_SECRET en .env}
+      APP_PUBLIC_URL: http://${PUBLIC_HOST:-localhost}:8000
+    # Sin puertos publicados: el acceso externo pasa por keycloak-proxy.
+    expose:
+      - "8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data/h2
+      - ./keycloak/realm:/opt/keycloak/data/import:ro
+    healthcheck:
+      test: ["CMD-SHELL", "{ printf 'HEAD /health HTTP/1.0\\r\\n\\r\\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  keycloak-proxy:
+    image: nginx:1.27-alpine
+    depends_on:
+      - keycloak
+    ports:
+      - "8080:8080"             # login de usuarios (red local); /admin bloqueado
+      - "127.0.0.1:8081:8081"   # consola de administración (solo en el servidor)
+    volumes:
+      - ./keycloak-proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+  padron-mock:
+    build: ./padron-mock
+    environment:
+      MOCK_LATENCY_MIN: ${MOCK_LATENCY_MIN:-0.2}
+      MOCK_LATENCY_MAX: ${MOCK_LATENCY_MAX:-7.0}
+      MOCK_FAILURE_RATE: ${MOCK_FAILURE_RATE:-0.2}
+    ports:
+      - "127.0.0.1:8001:8001"   # solo local: Swagger UI en /docs, Redoc en /redoc
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build: ./app
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?definir DJANGO_SECRET_KEY en .env}
+      DJANGO_DEBUG: "0"
+      DJANGO_ALLOWED_HOSTS: ${PUBLIC_HOST:-localhost},localhost
+      DATABASE_PATH: /data/db.sqlite3
+      # OIDC: el navegador usa la URL pública; el contenedor usa la interna.
+      OIDC_RP_CLIENT_ID: red-barrial-web
+      OIDC_RP_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      OIDC_OP_AUTHORIZATION_ENDPOINT: http://${PUBLIC_HOST:-localhost}:8080/realms/red-barrial/protocol/openid-connect/auth
+      OIDC_OP_LOGOUT_ENDPOINT: http://${PUBLIC_HOST:-localhost}:8080/realms/red-barrial/protocol/openid-connect/logout
+      OIDC_OP_TOKEN_ENDPOINT: http://keycloak:8080/realms/red-barrial/protocol/openid-connect/token
+      OIDC_OP_USER_ENDPOINT: http://keycloak:8080/realms/red-barrial/protocol/openid-connect/userinfo
+      OIDC_OP_JWKS_ENDPOINT: http://keycloak:8080/realms/red-barrial/protocol/openid-connect/certs
+      # Padrón provincial (simulado).
+      PADRON_URL: http://padron-mock:8001
+      PADRON_TIMEOUT_SECONDS: "5"
+      PADRON_CACHE_MAX_AGE_HOURS: "168"
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-data:/data
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      padron-mock:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  keycloak-data:
