@@ -102,6 +102,16 @@ LOGIN_URL = "oidc_authentication_init"
 LOGIN_REDIRECT_URL = "/panel/"
 LOGOUT_REDIRECT_URL = "/"
 
+# Acceso público detrás del túnel (ADR-15): ngrok termina HTTPS y el proxy reenvía
+# por HTTP con X-Forwarded-Proto=https. Sin PUBLIC_URL https, todo queda como en uso local.
+PUBLIC_URL = env("PUBLIC_URL", "")
+if PUBLIC_URL.startswith("https://"):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+    CSRF_TRUSTED_ORIGINS = [PUBLIC_URL]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

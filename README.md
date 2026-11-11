@@ -121,11 +121,46 @@ utiliza para el emisor OIDC y las URLs de redirección de Keycloak. La consola
 administrativa (puerto `8081`) y el padrón simulado (puerto `8001`) permanecen
 limitados al equipo servidor.
 
+## Acceso remoto con ngrok (opcional, ADR-15)
+
+Permite que un referente de comedor entre desde su celular, fuera de la red del
+depósito. Es una configuración para el trabajo práctico y demostraciones, no
+para producción. Todos los usuarios, incluido el depósito, entran por la URL
+pública; sin internet o sin el túnel nadie puede iniciar sesión.
+
+1. Crear una cuenta en ngrok y copiar el *authtoken* y el dominio gratuito
+   asignado.
+2. **Antes de activar el modo público**, en la consola de Keycloak
+   (`http://localhost:8081/admin/`, realm `red-barrial`, Clients,
+   `red-barrial-web`) agregar el dominio a *Valid redirect URIs*
+   (`https://<dominio>/*`), *Valid post logout redirect URIs*
+   (`https://<dominio>/*`) y *Web origins* (`https://<dominio>`). El realm solo
+   se importa la primera vez, por eso hay que hacerlo a mano.
+3. En `.env`: `PUBLIC_HOST=<dominio sin https://>`,
+   `PUBLIC_URL=https://<dominio>` y `NGROK_AUTHTOKEN=<token>`.
+4. Iniciar con el perfil público:
+
+```bash
+docker compose --profile publico up -d --build
+```
+
+Solo se expone el puerto 8090 del proxy, con rutas permitidas (`/`, `/oidc/`,
+`/panel/`, `/referente/`, `/static/`, `/realms/`, `/resources/`); `/admin`
+responde 403 y el resto, 404. Con el acceso remoto activo, administrar Keycloak
+también requiere el túnel levantado, porque el inicio de sesión de la consola
+usa la URL pública.
+
+Para volver al uso local: vaciar `PUBLIC_URL`, volver a `PUBLIC_HOST=localhost`,
+ejecutar `docker compose --profile publico stop ngrok` y luego
+`docker compose up -d`.
+
 ## Variables de entorno
 
 | Variable | Uso |
 |---|---|
 | `PUBLIC_HOST` | Host público de la aplicación en la red local; por defecto, `localhost`. |
+| `PUBLIC_URL` | URL pública con `https://` del túnel ngrok (opcional). Vacía en uso local. |
+| `NGROK_AUTHTOKEN` | Token de la cuenta de ngrok (opcional; solo con acceso remoto). |
 | `KEYCLOAK_VERSION` | Versión de la imagen de Keycloak; por defecto, `26.0`. |
 | `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD` | Usuario y contraseña iniciales del administrador de Keycloak. |
 | `OIDC_CLIENT_SECRET` | Secreto del cliente OIDC; debe coincidir entre la configuración de Keycloak y Django. |
@@ -135,8 +170,9 @@ limitados al equipo servidor.
 
 No publicar el archivo `.env` ni reutilizar sus secretos en otros entornos. La
 configuración usa HTTP, Keycloak en modo de desarrollo y almacenamiento H2:
-está pensada para el prototipo en una red local, no para exponer el sistema a
-Internet o usarlo en producción.
+está pensada para el prototipo en una red local, no para usarlo en producción.
+La única exposición a Internet prevista es el túnel opcional de ngrok descrito en
+la sección siguiente.
 
 ## Padrón provincial simulado
 
