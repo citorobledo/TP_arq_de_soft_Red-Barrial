@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block titulo %}Depósito · Red barrial{% endblock %}
+
+{% block contenido %}
+<section class="hero">
+  <svg class="sol" viewBox="0 0 64 64" aria-hidden="true">
+    <g stroke="#f6b40e" stroke-width="3" stroke-linecap="round">
+      <line x1="32" y1="2" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="62"/>
+      <line x1="2" y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="62" y2="32"/>
+      <line x1="10.8" y1="10.8" x2="17.9" y2="17.9"/><line x1="46.1" y1="46.1" x2="53.2" y2="53.2"/>
+      <line x1="10.8" y1="53.2" x2="17.9" y2="46.1"/><line x1="46.1" y1="17.9" x2="53.2" y2="10.8"/>
+    </g>
+    <circle cx="32" cy="32" r="13" fill="#f6b40e"/>
+  </svg>
+  <h1>Panel del voluntario de depósito</h1>
+  <p>Registrá los ingresos de donaciones y las entregas a comedores habilitados, y controlá qué lote vence primero.</p>
+</section>
+
+<section class="resumen" aria-label="Resumen del depósito">
+  <div class="dato"><div class="valor">{{ resumen.stock_kg|default:"0" }} kg</div><div class="etiqueta">Stock total</div></div>
+  <div class="dato"><div class="valor">{{ resumen.ingresos_hoy|default:"0" }}</div><div class="etiqueta">Ingresos de hoy</div></div>
+  <div class="dato"><div class="valor">{{ resumen.entregas_hoy|default:"0" }}</div><div class="etiqueta">Entregas de hoy</div></div>
+  <div class="dato alerta"><div class="valor">{{ resumen.por_vencer|default:"0" }}</div><div class="etiqueta">Lotes que vencen en 7 días</div></div>
+</section>
+
+<section class="formularios">
+  {# TODO: cambiar action="#" por la URL de la vista que guarda el ingreso #}
+  <div class="tarjeta">
+    <h2>Registrar ingreso</h2>
+    <form method="post" action="#">
+      {% csrf_token %}
+      <label for="donante">Donante</label>
+      <input id="donante" name="donante" type="text" placeholder="Empresa o particular" required>
+      <label for="alimento">Alimento</label>
+      <input id="alimento" name="alimento" type="text" placeholder="Ej: Arroz, leche, fideos" required>
+      <div class="fila">
+        <div>
+          <label for="cantidad_ing">Cantidad (kg)</label>
+          <input id="cantidad_ing" name="cantidad" type="number" min="0" step="0.1" required>
+        </div>
+        <div>
+          <label for="vencimiento">Vencimiento</label>
+          <input id="vencimiento" name="vencimiento" type="date" required>
+        </div>
+      </div>
+      <button type="submit">Guardar ingreso</button>
+    </form>
+  </div>
+
+  {# TODO: cambiar action="#" por la URL de la vista que guarda la entrega #}
+  <div class="tarjeta">
+    <h2>Registrar entrega</h2>
+    <form method="post" action="#">
+      {% csrf_token %}
+      <label for="comedor">Comedor habilitado</label>
+      <select id="comedor" name="comedor" required>
+        <option value="">Elegí un comedor…</option>
+        {% for c in comedores %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}
+      </select>
+      <label for="lote">Lote</label>
+      <select id="lote" name="lote" required>
+        <option value="">Elegí un lote…</option>
+        {% for l in lotes %}<option value="{{ l.id }}">{{ l.descripcion }}</option>{% endfor %}
+      </select>
+      <label for="cantidad_ent">Cantidad (kg)</label>
+      <input id="cantidad_ent" name="cantidad" type="number" min="0" step="0.1" required>
+      <button type="submit">Guardar entrega</button>
+    </form>
+  </div>
+</section>
+
+<section class="listados">
+  <div class="tarjeta">
+    <h2>Últimos movimientos</h2>
+    <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Fecha</th><th>Tipo</th><th>Alimento</th><th>Lote</th><th class="num">Kg</th><th>Origen / destino</th></tr>
+      </thead>
+      <tbody>
+        {% for m in movimientos %}
+        <tr>
+          <td>{{ m.fecha }}</td>
+          <td><span class="etiqueta-tipo tipo-{{ m.tipo }}">{{ m.tipo_texto }}</span></td>
+          <td>{{ m.alimento }}</td>
+          <td>{{ m.lote }}</td>
+          <td class="num">{{ m.cantidad }}</td>
+          <td>{{ m.contraparte }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="vacio">Todavía no hay movimientos registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Próximos a vencer</h2>
+    <ul class="vencimientos">
+      {% for l in lotes_por_vencer %}
+      <li><span>{{ l.alimento }} <small>({{ l.lote }})</small></span><span class="cuando">{{ l.vence }}</span></li>
+      {% empty %}
+      <li class="vacio">No hay lotes por vencer.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}
