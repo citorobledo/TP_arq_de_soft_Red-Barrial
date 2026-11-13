@@ -10,7 +10,7 @@ class Lote(models.Model):
         max_length=100, db_column="NombreVoluntario"
     )
     producto = models.ForeignKey(
-        "producto.Producto",
+        "productos.Producto",
         on_delete=models.PROTECT,
         related_name="lotes",
         db_column="ID_Producto",

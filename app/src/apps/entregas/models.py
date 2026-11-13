@@ -21,7 +21,7 @@ class Entrega(models.Model):
     )
     nombre_voluntario = models.CharField(max_length=100, db_column="NombreVoluntario")
     comedor = models.ForeignKey(
-        "comedor.Comedor",
+        "comedores.Comedor",
         on_delete=models.PROTECT,
         related_name="entregas",
         db_column="ID_Comedor",
@@ -54,7 +54,7 @@ class DetalleEntrega(models.Model):
     id = models.BigAutoField(primary_key=True, db_column="ID")
     cantidad = models.PositiveIntegerField(db_column="Cantidad")
     lote = models.ForeignKey(
-        "lote.Lote",
+        "deposito.Lote",
         on_delete=models.PROTECT,
         related_name="detalles_entrega",
         db_column="ID_Lote",

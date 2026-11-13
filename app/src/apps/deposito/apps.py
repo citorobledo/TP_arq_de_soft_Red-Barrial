@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class LoteConfig(AppConfig):
+class DepositoConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.lote"
-    label = "lote"
+    name = "apps.deposito"
+    label = "deposito"

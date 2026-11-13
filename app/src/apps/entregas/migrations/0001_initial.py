@@ -6,8 +6,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("lote", "0001_initial"),
-        ("comedor", "0001_initial"),
+        ("deposito", "0001_initial"),
+        ("comedores", "0001_initial"),
     ]
 
     operations = [
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
                         db_column="ID_Comedor",
                         on_delete=django.db.models.deletion.PROTECT,
                         related_name="entregas",
-                        to="comedor.comedor",
+                        to="comedores.comedor",
                     ),
                 ),
             ],
@@ -97,7 +97,7 @@ class Migration(migrations.Migration):
                         db_column="ID_Lote",
                         on_delete=django.db.models.deletion.PROTECT,
                         related_name="detalles_entrega",
-                        to="lote.lote",
+                        to="deposito.lote",
                     ),
                 ),
                 (

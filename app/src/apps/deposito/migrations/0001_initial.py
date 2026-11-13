@@ -6,7 +6,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("producto", "0001_initial"),
+        ("productos", "0001_initial"),
     ]
 
     operations = [
@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                         db_column="ID_Producto",
                         on_delete=django.db.models.deletion.PROTECT,
                         related_name="lotes",
-                        to="producto.Producto",
+                        to="productos.Producto",
                     ),
                 ),
             ],
