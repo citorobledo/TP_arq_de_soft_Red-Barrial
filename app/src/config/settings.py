@@ -24,6 +24,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "mozilla_django_oidc",
     "apps.seguridad",
+    "apps.producto",
+    "apps.lote",
+    "apps.comedor",
+    "apps.entregas",
 ]
 
 MIDDLEWARE = [
