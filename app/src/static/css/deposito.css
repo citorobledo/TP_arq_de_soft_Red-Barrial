@@ -22,6 +22,9 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  display: flex;          /* pie siempre al fondo de la ventana */
+  flex-direction: column;
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
   color: var(--texto);
   background: var(--fondo);
@@ -50,11 +53,11 @@ header {
 
 .logo-unahur {
   flex: none;
-  height: 44px;
-  min-width: 44px;
-  padding: 4px 10px;
-  display: grid;
-  place-items: center;
+  height: 52px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* centra el logo dentro del recuadro blanco */
   background: var(--blanco);
   border-radius: 10px;
   font-weight: 800;
@@ -62,7 +65,7 @@ header {
   color: var(--azul);
   font-size: .85rem;
 }
-.logo-unahur img { display: block; height: 100%; width: auto; max-width: 120px; object-fit: contain; }
+.logo-unahur img { display: block; height: 100%; width: auto; max-width: 160px; margin: 0 auto; object-fit: contain; }
 
 header .marca {
   color: var(--azul-oscuro);
@@ -103,7 +106,7 @@ button.secundario {
 button.secundario:hover { background: var(--celeste-claro); }
 
 /* ---------- Contenido ---------- */
-main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 40px; }
+main { max-width: 1100px; width: 100%; margin: 0 auto; padding: 24px 20px 40px; flex: 1 0 auto; }
 
 .hero {
   position: relative;
