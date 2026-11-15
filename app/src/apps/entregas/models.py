@@ -20,6 +20,8 @@ class Entrega(models.Model):
         null=True, blank=True, db_column="FechaConfirmacion"
     )
     nombre_voluntario = models.CharField(max_length=100, db_column="NombreVoluntario")
+    nombre_referente = models.CharField(max_length=100, blank=True, default="", db_column="NombreReferente"
+    )
     comedor = models.ForeignKey(
         "comedores.Comedor",
         on_delete=models.PROTECT,
@@ -46,6 +48,7 @@ class Entrega(models.Model):
                 self.fecha_confirmacion.isoformat() if self.fecha_confirmacion else None
             ),
             "nombre_voluntario": self.nombre_voluntario,
+            "nombre_referente": self.nombre_referente,
             "id_comedor": self.comedor_id,
         }
 
