@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Recepción de entregas · Red barrial{% endblock %}
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/comedor.css' %}">
+<div class="rc">
+  <section class="rc-hero">
+    <h1>Panel del referente de comedor</h1>
+    <p>Confirmá la llegada de cada entrega para dejar registrado quién la recibió y cuándo.</p>
+    {% if comedores %}<p class="rc-comedores">Comedor: {% for c in comedores %}{{ c.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  </section>
+
+  {% for m in messages %}<p class="rc-aviso rc-{{ m.tags }}" role="status">{{ m }}</p>{% endfor %}
+
+  <section class="rc-resumen">
+    <div class="rc-kpi"><strong>{{ pendientes|length }}</strong><span>Entregas por recibir</span></div>
+    <div class="rc-kpi"><strong>{{ recibidas_hoy }}</strong><span>Recibidas hoy</span></div>
+  </section>
+
+  <section class="rc-panel">
+    <h2>Entregas por recibir</h2>
+    {% if pendientes %}
+    <div class="rc-tabla"><table>
+      <thead><tr><th>Registrada</th><th>Lotes</th><th>Envió</th><th></th></tr></thead>
+      <tbody>
+      {% for e in pendientes %}
+        <tr>
+          <td>{{ e.fecha_registro|date:"d/m H:i" }}</td>
+          <td>{% for d in e.detalles.all %}Lote #{{ d.lote_id }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+          <td>{{ e.nombre_voluntario }}</td>
+          <td>
+            <form method="post" action="{% url 'recibir_entrega' e.pk %}">{% csrf_token %}
+              <button type="submit" class="rc-boton">Confirmar recepción</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <p class="rc-vacio">No hay entregas por recibir. Cuando el depósito despache una a tu comedor, va a aparecer acá.</p>
+    {% endif %}
+  </section>
+
+  <section class="rc-panel">
+    <h2>Recibidas</h2>
+    {% if recibidas %}
+    <div class="rc-tabla"><table>
+      <thead><tr><th>Recibida</th><th>Lotes</th><th>Recibió</th></tr></thead>
+      <tbody>
+      {% for e in recibidas %}
+        <tr>
+          <td>{{ e.fecha_confirmacion|date:"d/m H:i" }}</td>
+          <td>{% for d in e.detalles.all %}Lote #{{ d.lote_id }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+          <td>{{ e.nombre_referente }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <p class="rc-vacio">Todavía no registraste recepciones.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
