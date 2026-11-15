@@ -1,16 +1,13 @@
-"""Panel del coordinador: ve todo y exporta reportes.
+"""Panel del coordinador: ve todo y exporta reportes."""
 
-Archivo nuevo: no toca views.py. Usa rol_requerido de decorators.py, así que
-solo entra quien pertenece al grupo coordinador (el resto ve sin_permisos.html).
-"""
 import csv
 from datetime import date
 
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from .decorators import rol_requerido
-from .roles import COORDINADOR
+from apps.seguridad.decorators import rol_requerido
+from apps.seguridad.roles import COORDINADOR
 
 # Reportes disponibles: clave -> (título, columnas, claves del diccionario de cada fila)
 REPORTES = {
@@ -40,11 +37,10 @@ ORIGEN_DATOS = {
 def _datos():
     """Único lugar donde se obtienen los datos del coordinador.
 
-    Todavía no hay modelos de lotes ni movimientos, así que devuelve vacío.
-    Cuando existan, se consultan acá y tanto la pantalla como los reportes
-    se llenan solos. Cada movimiento es un dict con: fecha, tipo ("ingreso" o
-    "entrega"), tipo_texto, alimento, lote, cantidad, contraparte. Cada lote por
-    vencer: alimento, lote, vence. Cada comedor: nombre, direccion, referente,
+    Todavía no hay consultas conectadas a los servicios, así que devuelve vacío.
+    Cada movimiento es un dict con: fecha, tipo ("ingreso" o "entrega"),
+    tipo_texto, alimento, lote, cantidad, contraparte. Cada lote por vencer:
+    alimento, lote, vence. Cada comedor: nombre, direccion, referente,
     estado ("habilitado" o "no_habilitado") y estado_texto (lo que se muestra).
     """
     return {
@@ -64,7 +60,7 @@ def _celda(valor):
 
 @rol_requerido(COORDINADOR)
 def coordinador(request):
-    return render(request, "seguridad/coordinador.html", _datos())
+    return render(request, "reportes/coordinador.html", _datos())
 
 
 @rol_requerido(COORDINADOR)
@@ -79,7 +75,7 @@ def exportar_reportes(request):
     respuesta["Content-Disposition"] = (
         f'attachment; filename="reporte_{clave}_{date.today():%Y%m%d}.csv"'
     )
-    respuesta.write("﻿")  # BOM: Excel respeta las tildes
+    respuesta.write("\ufeff")  # BOM: Excel respeta las tildes
     escritor = csv.writer(respuesta, delimiter=";")  # Excel en español separa con ;
     escritor.writerow(columnas)
     for fila in filas:

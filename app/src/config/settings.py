@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.deposito",
     "apps.comedores",
     "apps.entregas",
+    "apps.reportes",
 ]
 
 MIDDLEWARE = [
@@ -111,3 +112,4 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
+}

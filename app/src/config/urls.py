@@ -7,4 +7,6 @@ urlpatterns = [
     path("oidc/", include("mozilla_django_oidc.urls")),
     path("api/", api.urls),
     path("", include("apps.seguridad.urls")),
+    path("", include("apps.deposito.urls")),
+    path("", include("apps.reportes.urls")),
 ]

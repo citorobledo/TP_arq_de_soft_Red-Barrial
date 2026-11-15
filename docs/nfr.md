@@ -38,3 +38,4 @@ HTTPS tampoco es necesario: el sistema es local, dockerizado y sin salida al ext
 | ADR-13 Reglas de negocio en servicios con tests | 04, 07 |
 | ADR-14 Restricción de la consola de administración de Keycloak | 08 (tensiona 01 y 02) |
 | ADR-15 Separación en capas de servicios y repositorios sobre el ORM | 04, 07 |
+| ADR-16 Ubicación de vistas y plantillas HTML dentro de cada módulo | 01, 04 |
