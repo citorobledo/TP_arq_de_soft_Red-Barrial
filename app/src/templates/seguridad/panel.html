@@ -23,7 +23,8 @@
     <dt>Roles</dt>
     <dd>
       {% url 'deposito' as url_deposito %}
-      {% for rol in roles %}{% if rol == "voluntario_deposito" and url_deposito %}<a class="chip-rol" href="{{ url_deposito }}" title="Ir al panel de depósito">{{ rol }} →</a>{% else %}<span class="chip-rol">{{ rol }}</span>{% endif %}{% empty %}—{% endfor %}
+      {% url 'coordinador' as url_coordinador %}
+      {% for rol in roles %}{% if rol == "voluntario_deposito" and url_deposito %}<a class="chip-rol" href="{{ url_deposito }}" title="Ir al panel de depósito">{{ rol }} →</a>{% elif rol == "coordinador" and url_coordinador %}<a class="chip-rol" href="{{ url_coordinador }}" title="Ir al panel del coordinador">{{ rol }} →</a>{% else %}<span class="chip-rol">{{ rol }}</span>{% endif %}{% empty %}—{% endfor %}
     </dd>
   </dl>
   {% if not roles %}

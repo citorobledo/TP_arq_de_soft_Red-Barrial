@@ -291,3 +291,16 @@ a.chip-rol {
 }
 a.chip-rol:hover { background: #185a91; border-color: #185a91; }
 a.chip-rol:focus-visible { outline: 3px solid var(--sol); outline-offset: 2px; }
+
+/* ---------- Coordinador: exportar reportes ---------- */
+.exportar { margin-bottom: 24px; }
+.exportar form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.exportar .campo { flex: 1 1 240px; max-width: 420px; }
+.exportar .campo label { margin-top: 0; }
+.tarjeta.exportar form button { width: auto; margin-top: 0; padding: 10px 22px; }
+.exportar .ayuda { margin: 12px 0 0; color: var(--suave); font-size: .88rem; }
+
+/* ---------- Coordinador: comedores ---------- */
+.comedores { margin-top: 18px; }
+.estado-habilitado { background: #dff3e7; color: var(--ok); }
+.estado-no_habilitado { background: #fff0d6; color: var(--aviso); }
