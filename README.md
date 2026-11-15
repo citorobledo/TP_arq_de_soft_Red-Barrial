@@ -82,6 +82,7 @@ salvo que se quieran eliminar también esos datos.
 | Inicio de la aplicación | http://localhost:8000/ | Página pública; desde allí se inicia sesión |
 | Inicio de sesión OIDC | http://localhost:8000/oidc/authenticate/ | Inicia el redireccionamiento a Keycloak |
 | Panel de la aplicación | http://localhost:8000/panel/ | Requiere iniciar sesión; muestra usuario y roles |
+| Panel de voluntario deposito | http://localhost:8000/deposito/ | sesion iniciada con el rol; muestra ingreso y egreso mercaderia |
 | Retorno OIDC | http://localhost:8000/oidc/callback/ | URL de retorno de Keycloak; no abrir manualmente |
 | Cierre de sesión OIDC | http://localhost:8000/oidc/logout/ | Se envía mediante el formulario de cierre de sesión de la aplicación |
 | Consola de administración de Keycloak | http://localhost:8081/admin/ | Sólo accesible desde la computadora que ejecuta Docker; credenciales de administrador de `.env` |
@@ -93,7 +94,7 @@ salvo que se quieran eliminar también esos datos.
 | Lista de comedores de prueba | http://localhost:8001/comedores | API de ejemplo; puede demorar o responder HTTP 503 |
 | Consulta de comedor de prueba | http://localhost:8001/comedores/CP-001 | API de ejemplo; puede demorar o responder HTTP 503 |
 | Swagger UI de la OpenAPI | http://localhost:8000/api/docs | Documentación en la especificación OpenAPI en la interfaz visual |
-| JSON de la OpenAPI | http://localhost:8000/api/openapi.json | Documentación en la especificación OpenAPI en formato JSON | 
+| JSON de la OpenAPI | http://localhost:8000/api/openapi.json | Documentación en la especificación OpenAPI en formato JSON |
 
 El realm `red-barrial` y el cliente OIDC `red-barrial-web` se importan al
 iniciar Keycloak. No se crean usuarios automáticamente: hay que dar de alta
