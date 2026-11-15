@@ -17,7 +17,7 @@
 </section>
 
 <section class="resumen" aria-label="Resumen del depósito">
-  <div class="dato"><div class="valor">{{ resumen.stock_kg|default:"0" }} kg</div><div class="etiqueta">Stock total</div></div>
+  <div class="dato"><div class="valor">{{ resumen.stock_kg|default:"0" }} </div><div class="etiqueta">Stock total</div></div>
   <div class="dato"><div class="valor">{{ resumen.ingresos_hoy|default:"0" }}</div><div class="etiqueta">Ingresos de hoy</div></div>
   <div class="dato"><div class="valor">{{ resumen.entregas_hoy|default:"0" }}</div><div class="etiqueta">Entregas de hoy</div></div>
   <div class="dato alerta"><div class="valor">{{ resumen.por_vencer|default:"0" }}</div><div class="etiqueta">Lotes que vencen en 7 días</div></div>
@@ -37,7 +37,7 @@
       <input id="numero_lote" name="numero_lote" type="text" placeholder="Ej: L-0142" required>
       <div class="fila">
         <div>
-          <label for="cantidad_ing">Cantidad (kg)</label>
+          <label for="cantidad_ing">Cantidad</label>
           <input id="cantidad_ing" name="cantidad" type="number" min="0" step="0.1" required>
         </div>
         <div>

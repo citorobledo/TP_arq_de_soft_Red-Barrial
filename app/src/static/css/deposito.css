@@ -282,12 +282,23 @@ dl.datos-usuario dd { margin: 0; overflow-wrap: anywhere; }
   dl.datos-usuario dd { margin-bottom: 12px; }
 }
 
-/* Chip de rol que funciona como enlace (ej: voluntario_deposito → panel de depósito) */
-a.chip-rol {
-  text-decoration: none;
-  background: var(--azul);
-  border-color: var(--azul);
-  color: var(--blanco);
-}
-a.chip-rol:hover { background: #185a91; border-color: #185a91; }
-a.chip-rol:focus-visible { outline: 3px solid var(--sol); outline-offset: 2px; }
+
+/* ---------- Coordinador: exportar reportes ---------- */
+.exportar { margin-bottom: 24px; }
+.exportar form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.exportar .campo { flex: 1 1 240px; max-width: 420px; }
+.exportar .campo label { margin-top: 0; }
+.tarjeta.exportar form button { width: auto; margin-top: 0; padding: 10px 22px; }
+.exportar .ayuda { margin: 12px 0 0; color: var(--suave); font-size: .88rem; }
+
+/* ---------- Coordinador: comedores ---------- */
+.comedores { margin-top: 18px; }
+.estado-habilitado { background: #dff3e7; color: var(--ok); }
+.estado-no_habilitado { background: #fff0d6; color: var(--aviso); }
+
+/* ---------- Panel: cada rol con su botón de acción debajo ---------- */
+dl.datos-usuario { align-items: start; }
+.dt-roles { padding-top: 6px; }
+.rol-item { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 16px; }
+.rol-item:last-child { margin-bottom: 0; }
+a.boton-rol { padding: 8px 16px; font-size: .92rem; }
