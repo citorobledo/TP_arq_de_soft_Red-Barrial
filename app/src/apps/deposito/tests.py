@@ -29,8 +29,8 @@ class DepositoServicesTests(TestCase):
         # GET
         obtenido = deposito_services.obtener_lote(self.lote.id)
         self.assertEqual(obtenido.stock, 50)
-        self.assertEqual(obtenido.to_dict()["nombre_producto"], "Arroz")
-        self.assertEqual(obtenido.to_dict()["nombre_voluntario"], "Maria")
+        self.assertEqual(obtenido.nombre_producto, "Arroz")
+        self.assertEqual(obtenido.nombre_voluntario, "Maria")
 
     def test_crud_lote_put(self):
         # PUT

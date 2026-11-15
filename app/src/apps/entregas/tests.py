@@ -50,17 +50,17 @@ class EntregasServicesTests(TestCase):
     def test_crud_entrega_post(self):
         # POST
         self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)
-        self.assertEqual(self.entrega.detalles.count(), 2)
+        self.assertEqual(len(self.entrega.detalles), 2)
 
     def test_crud_entrega_get(self):
         # GET
         obtenido = entrega_services.obtener_entrega(self.entrega.id)
         self.assertEqual(obtenido.nombre_voluntario, "Ana")
-        self.assertEqual(obtenido.detalles.count(), 2)
+        self.assertEqual(len(obtenido.detalles), 2)
         self.assertEqual(
-                    entrega_services.listar_entregas(
+                    len(entrega_services.listar_entregas(
                         comedor_id=self.comedor.id, estado=Entrega.Estado.REGISTRADA
-                    ).count(),
+                    )),
                     1,
                 )
 
@@ -79,7 +79,7 @@ class EntregasServicesTests(TestCase):
                     {"lote_id": self.lote2.id, "cantidad": 999},
                 ],
             )
-        self.assertEqual(entrega_services.listar_entregas().count(), 0)
+        self.assertEqual(len(entrega_services.listar_entregas()), 0)
         self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 20)
         self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 10)
 
@@ -142,7 +142,7 @@ class EntregasServicesTests(TestCase):
         )
         self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 16)
         self.assertEqual(
-            entrega_services.listar_detalles_entrega(entrega_id=entrega.id).count(), 1
+            len(entrega_services.listar_detalles_entrega(entrega_id=entrega.id)), 1
         )
 
         # PUT detalle (cambia lote y cantidad)

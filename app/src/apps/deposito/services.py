@@ -7,18 +7,51 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from . import repositories
+from .dtos import LoteDTO
 from .models import Lote
+
+__all__ = [
+    "LoteDTO",
+    "listar_lotes",
+    "obtener_lote",
+    "crear_lote",
+    "actualizar_lote",
+    "eliminar_lote",
+    "descontar_stock",
+    "restituir_stock",
+]
+
+
+def _to_dto(lote: Lote) -> LoteDTO:
+    return LoteDTO(
+        id=lote.id,
+        numero_lote=lote.numero_lote,
+        fecha_vencimiento=lote.fecha_vencimiento,
+        stock=lote.stock,
+        nombre_voluntario=lote.nombre_voluntario,
+        producto_id=lote.producto_id,
+        nombre_producto=lote.producto.nombre,
+    )
 
 
 # --- GET (Lectura) ---
-def listar_lotes(*, solo_con_stock: bool = False, producto_id: Optional[int] = None):
+def listar_lotes(
+    *,
+    solo_con_stock: bool = False,
+    producto_id: Optional[int] = None,
+) -> list[LoteDTO]:
     """Lista lotes ordenados por FEFO, con filtros opcionales de stock y producto."""
-    return repositories.listar(solo_con_stock=solo_con_stock, producto_id=producto_id)
+    return [
+        _to_dto(lote)
+        for lote in repositories.listar(
+            solo_con_stock=solo_con_stock, producto_id=producto_id
+        )
+    ]
 
 
-def obtener_lote(lote_id: int) -> Lote:
+def obtener_lote(lote_id: int) -> LoteDTO:
     """Obtiene un lote por su ID con su producto asociado."""
-    return repositories.obtener_por_id(lote_id)
+    return _to_dto(repositories.obtener_por_id(lote_id))
 
 
 # --- POST (Creación) ---
@@ -30,7 +63,7 @@ def crear_lote(
     stock: int,
     nombre_voluntario: str,
     producto_id: int,
-) -> Lote:
+) -> LoteDTO:
     """Crea un nuevo lote validando sus reglas de negocio."""
     lote = Lote(
         numero_lote=numero_lote.strip(),
@@ -40,7 +73,7 @@ def crear_lote(
         producto_id=producto_id,
     )
     repositories.guardar(lote)
-    return repositories.obtener_por_id(lote.id)
+    return _to_dto(repositories.obtener_por_id(lote.id))
 
 
 # --- PUT (Actualización) ---
@@ -53,7 +86,7 @@ def actualizar_lote(
     stock: Optional[int] = None,
     nombre_voluntario: Optional[str] = None,
     producto_id: Optional[int] = None,
-) -> Lote:
+) -> LoteDTO:
     """Actualiza los campos provistos de un lote existente."""
     lote = repositories.obtener_por_id(lote_id, bloquear=True)
     if numero_lote is not None:
@@ -68,7 +101,7 @@ def actualizar_lote(
         lote.producto_id = producto_id
 
     repositories.guardar(lote)
-    return repositories.obtener_por_id(lote.id)
+    return _to_dto(repositories.obtener_por_id(lote.id))
 
 
 # --- DELETE (Eliminación) ---
@@ -81,7 +114,7 @@ def eliminar_lote(lote_id: int) -> None:
 
 # --- Reglas de Dominio de Stock (usadas por otros módulos como `entregas`) ---
 @transaction.atomic
-def descontar_stock(lote_id: int, cantidad: int) -> Lote:
+def descontar_stock(lote_id: int, cantidad: int) -> LoteDTO:
     """Descuenta `cantidad` del stock de un lote garantizando que nunca quede en negativo."""
     if cantidad <= 0:
         raise ValidationError({"cantidad": "La cantidad a descontar debe ser mayor a cero."})
@@ -97,15 +130,17 @@ def descontar_stock(lote_id: int, cantidad: int) -> Lote:
             }
         )
     lote.stock -= cantidad
-    return repositories.guardar(lote, update_fields=["stock"])
+    repositories.guardar(lote, update_fields=["stock"])
+    return _to_dto(repositories.obtener_por_id(lote.id))
 
 
 @transaction.atomic
-def restituir_stock(lote_id: int, cantidad: int) -> Lote:
+def restituir_stock(lote_id: int, cantidad: int) -> LoteDTO:
     """Restituye `cantidad` al stock de un lote (por anulación, edición o baja de entrega)."""
     if cantidad <= 0:
         raise ValidationError({"cantidad": "La cantidad a restituir debe ser mayor a cero."})
 
     lote = repositories.obtener_por_id(lote_id, bloquear=True)
     lote.stock += cantidad
-    return repositories.guardar(lote, update_fields=["stock"])
+    repositories.guardar(lote, update_fields=["stock"])
+    return _to_dto(repositories.obtener_por_id(lote.id))

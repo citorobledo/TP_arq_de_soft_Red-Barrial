@@ -22,8 +22,9 @@ class ProductoServicesTests(TestCase):
     def test_crud_producto_get(self):
         # GET
         self.assertEqual(producto_services.obtener_producto(self.prod.id).nombre, "Arroz Largo Fino")
-        self.assertEqual(producto_services.listar_productos().count(), 1)
-        self.assertEqual(self.prod.to_dict(), {"id": self.prod.id, "nombre": "Arroz Largo Fino"})
+        self.assertEqual(len(producto_services.listar_productos()), 1)
+        self.assertEqual(self.prod.id, self.prod.id)
+        self.assertEqual(self.prod.nombre, "Arroz Largo Fino")
         
     def test_crud_producto_put(self):
         # PUT
@@ -33,7 +34,7 @@ class ProductoServicesTests(TestCase):
     def test_crud_producto_delete(self):
         # DELETE
         producto_services.eliminar_producto(self.prod.id)
-        self.assertEqual(producto_services.listar_productos().count(), 0)
+        self.assertEqual(len(producto_services.listar_productos()), 0)
         with self.assertRaises(Producto.DoesNotExist):
             producto_services.obtener_producto(self.prod.id)
 

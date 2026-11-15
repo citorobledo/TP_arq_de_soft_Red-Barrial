@@ -3,6 +3,7 @@
 - No depende de vistas ni de HTTP.
 - No ejecuta consultas ORM directas: delega la persistencia en `repositories.py`.
 - Respeta los límites modulares (ADR-01): interactúa con el stock únicamente a través de `apps.deposito.services`.
+- Devuelve DTOs inmutables (`dtos.py`) para no exponer instancias activas del ORM fuera del módulo.
 """
 
 from datetime import date, datetime
@@ -15,7 +16,45 @@ from django.utils import timezone
 from apps.deposito import services as deposito_services
 
 from . import repositories
+from .dtos import DetalleEntregaDTO, EntregaDTO
 from .models import DetalleEntrega, Entrega
+
+__all__ = [
+    "EntregaDTO",
+    "DetalleEntregaDTO",
+    "listar_entregas",
+    "obtener_entrega",
+    "crear_entrega",
+    "actualizar_entrega",
+    "eliminar_entrega",
+    "listar_detalles_entrega",
+    "obtener_detalle_entrega",
+    "crear_detalle_entrega",
+    "actualizar_detalle_entrega",
+    "eliminar_detalle_entrega",
+]
+
+
+def _detalle_to_dto(detalle: DetalleEntrega) -> DetalleEntregaDTO:
+    return DetalleEntregaDTO(
+        id=detalle.id,
+        entrega_id=detalle.entrega_id,
+        lote_id=detalle.lote_id,
+        cantidad=detalle.cantidad,
+    )
+
+
+def _entrega_to_dto(entrega: Entrega) -> EntregaDTO:
+    return EntregaDTO(
+        id=entrega.id,
+        fecha=entrega.fecha,
+        estado=entrega.estado,
+        fecha_registro=entrega.fecha_registro,
+        fecha_confirmacion=entrega.fecha_confirmacion,
+        nombre_voluntario=entrega.nombre_voluntario,
+        comedor_id=entrega.comedor_id,
+        detalles=tuple(_detalle_to_dto(d) for d in entrega.detalles.all()),
+    )
 
 
 # ============================================================================
@@ -27,14 +66,17 @@ def listar_entregas(
     *,
     comedor_id: Optional[int] = None,
     estado: Optional[str] = None,
-):
+) -> list[EntregaDTO]:
     """Lista entregas con filtro opcional por comedor y estado."""
-    return repositories.listar_entregas(comedor_id=comedor_id, estado=estado)
+    return [
+        _entrega_to_dto(e)
+        for e in repositories.listar_entregas(comedor_id=comedor_id, estado=estado)
+    ]
 
 
-def obtener_entrega(entrega_id: int) -> Entrega:
-    """Obtiene una entrega por su ID con comedor y detalles precargados."""
-    return repositories.obtener_entrega_por_id(entrega_id)
+def obtener_entrega(entrega_id: int) -> EntregaDTO:
+    """Obtiene una entrega por su ID con sus detalles."""
+    return _entrega_to_dto(repositories.obtener_entrega_por_id(entrega_id))
 
 
 # --- POST (Creación) ---
@@ -46,7 +88,7 @@ def crear_entrega(
     comedor_id: int,
     estado: str = Entrega.Estado.REGISTRADA,
     detalles: Optional[Iterable[dict]] = None,
-) -> Entrega:
+) -> EntregaDTO:
     """Crea una entrega y sus renglones descontando stock de forma atómica.
 
     Cada elemento de `detalles` debe tener la forma: `{"lote_id": int, "cantidad": int}`.
@@ -67,7 +109,7 @@ def crear_entrega(
                 cantidad=item["cantidad"],
             )
 
-    return repositories.obtener_entrega_por_id(entrega.id)
+    return _entrega_to_dto(repositories.obtener_entrega_por_id(entrega.id))
 
 
 # --- PUT (Actualización) ---
@@ -80,7 +122,7 @@ def actualizar_entrega(
     fecha_confirmacion: Optional[datetime] = None,
     nombre_voluntario: Optional[str] = None,
     comedor_id: Optional[int] = None,
-) -> Entrega:
+) -> EntregaDTO:
     """Actualiza una entrega aplicando las reglas de transición de estados (ADR-11)."""
     entrega = repositories.obtener_entrega_por_id(entrega_id, bloquear=True)
     estado_anterior = entrega.estado
@@ -107,7 +149,7 @@ def actualizar_entrega(
                 deposito_services.restituir_stock(detalle.lote_id, detalle.cantidad)
 
     repositories.guardar_entrega(entrega)
-    return repositories.obtener_entrega_por_id(entrega.id)
+    return _entrega_to_dto(repositories.obtener_entrega_por_id(entrega.id))
 
 
 # --- DELETE (Eliminación) ---
@@ -132,14 +174,17 @@ def listar_detalles_entrega(
     *,
     entrega_id: Optional[int] = None,
     lote_id: Optional[int] = None,
-):
+) -> list[DetalleEntregaDTO]:
     """Lista los renglones de entrega por entrega o por lote."""
-    return repositories.listar_detalles(entrega_id=entrega_id, lote_id=lote_id)
+    return [
+        _detalle_to_dto(d)
+        for d in repositories.listar_detalles(entrega_id=entrega_id, lote_id=lote_id)
+    ]
 
 
-def obtener_detalle_entrega(detalle_id: int) -> DetalleEntrega:
+def obtener_detalle_entrega(detalle_id: int) -> DetalleEntregaDTO:
     """Obtiene un detalle de entrega por su ID."""
-    return repositories.obtener_detalle_por_id(detalle_id)
+    return _detalle_to_dto(repositories.obtener_detalle_por_id(detalle_id))
 
 
 # --- POST (Creación) ---
@@ -149,8 +194,8 @@ def crear_detalle_entrega(
     entrega_id: int,
     lote_id: int,
     cantidad: int,
-) -> DetalleEntrega:
-    """Agrega un renglón a una entrega y descuenta el stock mediante el servicio de Lote."""
+) -> DetalleEntregaDTO:
+    """Agrega un renglón a una entrega y descuenta el stock mediante el servicio de Depósito."""
     if cantidad <= 0:
         raise ValidationError({"cantidad": "La cantidad debe ser mayor a cero."})
 
@@ -164,7 +209,7 @@ def crear_detalle_entrega(
         cantidad=cantidad,
     )
     repositories.guardar_detalle(detalle)
-    return repositories.obtener_detalle_por_id(detalle.id)
+    return _detalle_to_dto(repositories.obtener_detalle_por_id(detalle.id))
 
 
 # --- PUT (Actualización) ---
@@ -174,8 +219,8 @@ def actualizar_detalle_entrega(
     *,
     cantidad: Optional[int] = None,
     lote_id: Optional[int] = None,
-) -> DetalleEntrega:
-    """Actualiza lote o cantidad de un detalle reajustando el stock a través de `lote.services`."""
+) -> DetalleEntregaDTO:
+    """Actualiza lote o cantidad de un detalle reajustando el stock a través de `deposito.services`."""
     detalle = repositories.obtener_detalle_por_id(detalle_id, bloquear=True)
     nuevo_lote_id = lote_id if lote_id is not None else detalle.lote_id
     nueva_cantidad = cantidad if cantidad is not None else detalle.cantidad
@@ -190,7 +235,7 @@ def actualizar_detalle_entrega(
     detalle.lote_id = nuevo_lote_id
     detalle.cantidad = nueva_cantidad
     repositories.guardar_detalle(detalle)
-    return repositories.obtener_detalle_por_id(detalle.id)
+    return _detalle_to_dto(repositories.obtener_detalle_por_id(detalle.id))
 
 
 # --- DELETE (Eliminación) ---

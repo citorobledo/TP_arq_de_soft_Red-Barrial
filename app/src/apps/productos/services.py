@@ -3,35 +3,52 @@
 from django.db import transaction
 
 from . import repositories
+from .dtos import ProductoDTO
 from .models import Producto
+
+__all__ = [
+    "ProductoDTO",
+    "listar_productos",
+    "obtener_producto",
+    "crear_producto",
+    "actualizar_producto",
+    "eliminar_producto",
+]
+
+
+def _to_dto(producto: Producto) -> ProductoDTO:
+    return ProductoDTO(
+        id=producto.id,
+        nombre=producto.nombre,
+    )
 
 
 # --- GET (Lectura) ---
-def listar_productos():
+def listar_productos() -> list[ProductoDTO]:
     """Devuelve el catálogo completo de productos."""
-    return repositories.listar()
+    return [_to_dto(p) for p in repositories.listar()]
 
 
-def obtener_producto(producto_id: int) -> Producto:
+def obtener_producto(producto_id: int) -> ProductoDTO:
     """Obtiene un producto por su ID."""
-    return repositories.obtener_por_id(producto_id)
+    return _to_dto(repositories.obtener_por_id(producto_id))
 
 
 # --- POST (Creación) ---
 @transaction.atomic
-def crear_producto(*, nombre: str) -> Producto:
+def crear_producto(*, nombre: str) -> ProductoDTO:
     """Crea un nuevo producto normalizando su nombre."""
     producto = Producto(nombre=nombre.strip())
-    return repositories.guardar(producto)
+    return _to_dto(repositories.guardar(producto))
 
 
 # --- PUT (Actualización) ---
 @transaction.atomic
-def actualizar_producto(producto_id: int, *, nombre: str) -> Producto:
+def actualizar_producto(producto_id: int, *, nombre: str) -> ProductoDTO:
     """Actualiza el nombre de un producto existente."""
     producto = repositories.obtener_por_id(producto_id, bloquear=True)
     producto.nombre = nombre.strip()
-    return repositories.guardar(producto)
+    return _to_dto(repositories.guardar(producto))
 
 
 # --- DELETE (Eliminación) ---

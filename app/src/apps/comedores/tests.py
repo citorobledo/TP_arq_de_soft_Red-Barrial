@@ -32,8 +32,8 @@ class ComedoresServicesTests(TestCase):
         # GET
         self.assertEqual(comedor_services.obtener_comedor(self.comedor.id).nombre, "Comedor Sol")
         self.assertEqual(comedor_services.obtener_comedor_por_codigo("CP-001").id, self.comedor.id)
-        self.assertEqual(comedor_services.listar_comedores(usuario_id=self.user1.id).count(), 1)
-        self.assertEqual(comedor_services.listar_comedores(usuario_id=self.user2.id).count(), 0)
+        self.assertEqual(len(comedor_services.listar_comedores(usuario_id=self.user1.id)), 1)
+        self.assertEqual(len(comedor_services.listar_comedores(usuario_id=self.user2.id)), 0)
 
     def test_crud_comedor_put(self):
         # PUT

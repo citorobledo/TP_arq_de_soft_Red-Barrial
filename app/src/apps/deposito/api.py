@@ -35,10 +35,6 @@ class LoteOut(Schema):
     producto_id: int
     nombre_producto: str
 
-    @staticmethod
-    def resolve_nombre_producto(obj) -> str:
-        return obj.producto.nombre
-
 
 @router.get("/", response=list[LoteOut], summary="Listar lotes (orden FEFO)")
 def listar_lotes(
