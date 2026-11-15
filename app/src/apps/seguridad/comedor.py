@@ -14,7 +14,7 @@ from apps.entregas.models import Entrega
 
 from .decorators import rol_requerido
 from .roles import REFERENTE_COMEDOR
-
+from apps.comedores import services as comedores_services
 
 def _nombre(usuario):
     return usuario.get_full_name() or usuario.username
@@ -22,7 +22,7 @@ def _nombre(usuario):
 
 @rol_requerido(REFERENTE_COMEDOR)
 def comedor(request):
-    comedores = list(request.user.comedores.all())  # TODO: usar el servicio de comedores
+    comedores = list(comedores_services.listar_comedores(usuario_id=request.user.id))
     pendientes, recibidas = [], []
     for c in comedores:
         pendientes += entregas_services.listar_entregas(
