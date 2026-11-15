@@ -93,6 +93,8 @@ salvo que se quieran eliminar también esos datos.
 | Salud del padrón simulado | http://localhost:8001/health | Responde `{"status":"ok"}` |
 | Lista de comedores de prueba | http://localhost:8001/comedores | API de ejemplo; puede demorar o responder HTTP 503 |
 | Consulta de comedor de prueba | http://localhost:8001/comedores/CP-001 | API de ejemplo; puede demorar o responder HTTP 503 |
+| Swagger UI de la OpenAPI | http://localhost:8000/api/docs | Documentación en la especificación OpenAPI en la interfaz visual |
+| JSON de la OpenAPI | http://localhost:8000/api/openapi.json | Documentación en la especificación OpenAPI en formato JSON |
 
 El realm `red-barrial` y el cliente OIDC `red-barrial-web` se importan al
 iniciar Keycloak. No se crean usuarios automáticamente: hay que dar de alta

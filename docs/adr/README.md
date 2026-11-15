@@ -16,5 +16,6 @@
 | [ADR-12](0012-padron-mock.md) | padron-mock como servicio simulado | 04, 05 | Aceptado |
 | [ADR-13](0013-reglas-negocio-servicios-tests.md) | Reglas de negocio en servicios con tests | 04, 07 | Propuesto |
 | [ADR-14](0014-restriccion-consola-admin-keycloak.md) | Restricción de la consola de administración de Keycloak | 08 | Propuesto |
+| [ADR-15](0015-arquitectura-limpia-repositorios-servicios.md) | Separación en capas de servicios y repositorios sobre el ORM | 04, 07 | Aceptado |
 
 Plantilla: [0000-plantilla.md](0000-plantilla.md). Requisitos: [../nfr.md](../nfr.md).

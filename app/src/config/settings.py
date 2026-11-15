@@ -24,6 +24,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "mozilla_django_oidc",
     "apps.seguridad",
+    "apps.productos",
+    "apps.deposito",
+    "apps.comedores",
+    "apps.entregas",
 ]
 
 MIDDLEWARE = [
@@ -107,4 +111,3 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
-}
