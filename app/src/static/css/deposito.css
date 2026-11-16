@@ -422,3 +422,75 @@ dialog.modal-dialog::backdrop {
   width: 100%;
   border-style: dashed;
 }
+
+/* ---------- Acciones en tabla de lotes ---------- */
+.acciones-tabla {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.acciones-tabla form {
+  margin: 0;
+}
+button.boton-tabla {
+  padding: 4px 10px;
+  font-size: .8rem;
+  border-radius: 7px;
+}
+button.boton-peligro {
+  color: #a61b1b;
+  border-color: #d99b9b;
+}
+button.boton-peligro:hover {
+  background: #fde8e8;
+}
+
+/* ---------- Entregas: cabecera, estados y confirmación ---------- */
+.cabecera-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.cabecera-tarjeta h2 {
+  margin: 0;
+}
+.barra-volver {
+  margin-bottom: 18px;
+}
+.barra-volver .boton.secundario {
+  background: var(--blanco);
+  color: var(--azul-oscuro);
+  border: 1px solid var(--azul-oscuro);
+  padding: 7px 14px;
+}
+.barra-volver .boton.secundario:hover {
+  background: var(--celeste-claro);
+}
+.estado-registrada {
+  background: var(--celeste-claro);
+  color: var(--azul);
+}
+.estado-confirmada {
+  background: #dff3e7;
+  color: var(--ok);
+}
+.estado-anulada {
+  background: #fde8e8;
+  color: #a61b1b;
+}
+.resumen-confirmacion {
+  background: var(--fondo);
+  border: 1px solid var(--celeste-borde);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: .92rem;
+}
+.resumen-confirmacion p {
+  margin: 0 0 6px;
+}
+.resumen-confirmacion ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}

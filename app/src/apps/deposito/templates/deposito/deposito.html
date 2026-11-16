@@ -44,6 +44,7 @@
             <th>Vencimiento</th>
             <th class="num">Stock</th>
             <th>Voluntario</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -54,10 +55,30 @@
             <td>{{ l.fecha_vencimiento }}</td>
             <td class="num">{{ l.stock }}</td>
             <td>{{ l.nombre_voluntario }}</td>
+            <td>
+              <div class="acciones-tabla">
+                <button
+                  type="button"
+                  class="secundario boton-tabla btn-editar-lote"
+                  data-id="{{ l.id }}"
+                  data-producto-id="{{ l.producto_id }}"
+                  data-numero="{{ l.numero_lote }}"
+                  data-vencimiento="{{ l.fecha_vencimiento|date:'Y-m-d' }}"
+                  data-stock="{{ l.stock }}"
+                  data-voluntario="{{ l.nombre_voluntario }}"
+                >Editar</button>
+                <form method="post" action="{% url 'deposito' %}" onsubmit="return confirm('¿Seguro que querés eliminar el lote {{ l.numero_lote }}?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="accion" value="eliminar_lote">
+                  <input type="hidden" name="lote_id" value="{{ l.id }}">
+                  <button type="submit" class="secundario boton-tabla boton-peligro">Eliminar</button>
+                </form>
+              </div>
+            </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="5" class="vacio">Todavía no hay lotes registrados en el depósito.</td>
+            <td colspan="6" class="vacio">Todavía no hay lotes registrados en el depósito.</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -118,6 +139,46 @@
   </div>
 </dialog>
 
+{# Modal para editar un lote existente #}
+<dialog id="dialogo-editar-lote" class="modal-dialog">
+  <div class="modal-contenido">
+    <h2>Editar lote</h2>
+    <p class="ayuda">Modificá los datos del lote seleccionado.</p>
+    <form method="post" action="{% url 'deposito' %}">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="editar_lote">
+      <input type="hidden" name="lote_id" id="edit_lote_id">
+
+      <label for="edit_producto_id">Alimento (Producto)</label>
+      <select id="edit_producto_id" name="producto_id" required>
+        {% for p in productos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}
+      </select>
+
+      <label for="edit_numero_lote">Número de lote</label>
+      <input id="edit_numero_lote" name="numero_lote" type="text" required>
+
+      <div class="fila">
+        <div>
+          <label for="edit_cantidad">Stock</label>
+          <input id="edit_cantidad" name="cantidad" type="number" min="0" step="1" required>
+        </div>
+        <div>
+          <label for="edit_vencimiento">Vencimiento</label>
+          <input id="edit_vencimiento" name="vencimiento" type="date" required>
+        </div>
+      </div>
+
+      <label for="edit_voluntario">Voluntario</label>
+      <input id="edit_voluntario" name="nombre_voluntario" type="text" required>
+
+      <div class="modal-acciones">
+        <button type="button" class="secundario" id="cancelar-modal-editar">Cancelar</button>
+        <button type="submit">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
 <script>
   const dialog = document.getElementById('dialogo-producto');
   const btnAbrir = document.getElementById('abrir-modal-producto');
@@ -127,6 +188,26 @@
     btnCerrar.addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) dialog.close();
+    });
+  }
+
+  const dialogEditar = document.getElementById('dialogo-editar-lote');
+  const btnCerrarEditar = document.getElementById('cancelar-modal-editar');
+  if (dialogEditar) {
+    document.querySelectorAll('.btn-editar-lote').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.getElementById('edit_lote_id').value = btn.dataset.id;
+        document.getElementById('edit_producto_id').value = btn.dataset.productoId;
+        document.getElementById('edit_numero_lote').value = btn.dataset.numero;
+        document.getElementById('edit_vencimiento').value = btn.dataset.vencimiento;
+        document.getElementById('edit_cantidad').value = btn.dataset.stock;
+        document.getElementById('edit_voluntario').value = btn.dataset.voluntario;
+        dialogEditar.showModal();
+      });
+    });
+    btnCerrarEditar.addEventListener('click', () => dialogEditar.close());
+    dialogEditar.addEventListener('click', (e) => {
+      if (e.target === dialogEditar) dialogEditar.close();
     });
   }
 </script>

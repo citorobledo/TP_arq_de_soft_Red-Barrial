@@ -2,7 +2,8 @@
 
 from datetime import date, timedelta
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import ProtectedError
 from django.shortcuts import redirect, render
 
 from apps.deposito import services as deposito_services
@@ -26,6 +27,43 @@ def deposito(request):
                 return redirect("deposito")
             except ValidationError as exc:
                 error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+        elif accion == "editar_lote":
+            try:
+                lote_id = int(request.POST.get("lote_id", "0"))
+                producto_id = int(request.POST.get("producto_id", "0"))
+                voluntario = (
+                    request.POST.get("nombre_voluntario", "").strip()
+                    or request.user.get_full_name()
+                    or request.user.username
+                )
+                deposito_services.actualizar_lote(
+                    lote_id,
+                    numero_lote=request.POST.get("numero_lote", ""),
+                    fecha_vencimiento=date.fromisoformat(
+                        request.POST.get("vencimiento", "")
+                    ),
+                    stock=int(float(request.POST.get("cantidad", "0"))),
+                    nombre_voluntario=voluntario,
+                    producto_id=producto_id,
+                )
+                return redirect("deposito")
+            except ObjectDoesNotExist:
+                error = "El lote seleccionado no existe."
+            except ValidationError as exc:
+                error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+            except ValueError:
+                error = "Verificá los datos ingresados para editar el lote."
+        elif accion == "eliminar_lote":
+            try:
+                lote_id = int(request.POST.get("lote_id", "0"))
+                deposito_services.eliminar_lote(lote_id)
+                return redirect("deposito")
+            except ObjectDoesNotExist:
+                error = "El lote seleccionado no existe."
+            except ProtectedError:
+                error = "No se puede eliminar este lote porque está asociado a una o más entregas."
+            except ValueError:
+                error = "Identificador de lote inválido."
         else:
             try:
                 producto_id = int(request.POST.get("producto_id", "0"))

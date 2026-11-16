@@ -13,7 +13,7 @@
     <circle cx="32" cy="32" r="13" fill="#f6b40e"/>
   </svg>
   <h1>Panel del voluntario de depósito</h1>
-  <p>Registrá las entregas a comedores habilitados y consultá el historial de envíos realizados.</p>
+  <p>Consultá el historial inmutable de entregas a comedores. Si hay un error, anulá la entrega para restituir el stock y registrá una nueva.</p>
 </section>
 
 <nav class="tabs-nav" aria-label="Navegación de depósito">
@@ -32,122 +32,59 @@
   <p class="aviso-rol" role="alert">{{ error }}</p>
 {% endif %}
 
-<section class="listados">
-  <div class="tarjeta">
+<section class="tarjeta">
+  <div class="cabecera-tarjeta">
     <h2>Historial de entregas</h2>
-    <div class="tabla-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Comedor</th>
-            <th>Detalle (Lote y cantidad)</th>
-            <th>Voluntario</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for e in entregas %}
-          <tr>
-            <td><strong>#{{ e.id }}</strong></td>
-            <td>{{ e.fecha }}</td>
-            <td>{{ e.comedor }}</td>
-            <td>
-              {% for d in e.detalles %}
-                <div>{{ d.lote }}: <strong>{{ d.cantidad }}</strong></div>
-              {% empty %}
-                <span class="vacio">Sin detalles</span>
-              {% endfor %}
-            </td>
-            <td>{{ e.nombre_voluntario }}</td>
-            <td><span class="etiqueta-tipo tipo-entrega">{{ e.estado }}</span></td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6" class="vacio">Todavía no hay entregas registradas.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    <a class="boton" href="{% url 'nueva_entrega' %}">+ Nueva entrega</a>
   </div>
-
-  <div class="tarjeta">
-    <h2>Registrar entrega</h2>
-    <form method="post" action="{% url 'entregas' %}">
-      {% csrf_token %}
-      <label for="comedor">Comedor habilitado</label>
-      <select id="comedor" name="comedor" required>
-        <option value="">Elegí un comedor…</option>
-        {% for c in comedores %}<option value="{{ c.id }}">{{ c.codigo }} - {{ c.nombre }}</option>{% endfor %}
-      </select>
-
-      <label>Lotes y cantidades a entregar (FEFO)</label>
-      <div id="items-entrega" class="items-entrega">
-        <div class="item-entrega">
-          <select name="lote_id" aria-label="Lote disponible" required>
-            <option value="">Elegí un lote…</option>
-            {% for l in lotes %}<option value="{{ l.id }}">{{ l.descripcion }}</option>{% endfor %}
-          </select>
-          <input name="cantidad" type="number" min="1" step="1" placeholder="Cant." aria-label="Cantidad" required>
-          <button type="button" class="secundario boton-quitar" title="Quitar fila" disabled>×</button>
-        </div>
-      </div>
-
-      <button type="button" id="agregar-item-entrega" class="secundario boton-agregar-fila">+ Agregar otro lote / producto</button>
-
-      <div class="fila">
-        <div>
-          <label for="fecha">Fecha de entrega</label>
-          <input id="fecha" name="fecha" type="date" value="{{ hoy }}" required>
-        </div>
-        <div>
-          <label for="nombre_voluntario">Voluntario</label>
-          <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" required>
-        </div>
-      </div>
-
-      <button type="submit">Registrar entrega</button>
-    </form>
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Fecha</th>
+          <th>Comedor</th>
+          <th>Detalle (Lote y cantidad)</th>
+          <th>Voluntario</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in entregas %}
+        <tr>
+          <td><strong>#{{ e.id }}</strong></td>
+          <td>{{ e.fecha }}</td>
+          <td>{{ e.comedor }}</td>
+          <td>
+            {% for d in e.detalles %}
+              <div>{{ d.lote }}: <strong>{{ d.cantidad }}</strong></div>
+            {% empty %}
+              <span class="vacio">Sin detalles</span>
+            {% endfor %}
+          </td>
+          <td>{{ e.nombre_voluntario }}</td>
+          <td><span class="etiqueta-tipo estado-{{ e.estado }}">{{ e.estado }}</span></td>
+          <td>
+            {% if e.estado == "registrada" %}
+              <form method="post" action="{% url 'entregas' %}" onsubmit="return confirm('¿Seguro que querés anular la entrega #{{ e.id }}? Esta acción restituirá el stock de los lotes.');">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="anular_entrega">
+                <input type="hidden" name="entrega_id" value="{{ e.id }}">
+                <button type="submit" class="secundario boton-tabla boton-peligro">Anular</button>
+              </form>
+            {% else %}
+              <span class="vacio">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="vacio">Todavía no hay entregas registradas.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </section>
-
-<script>
-  (function () {
-    const contenedor = document.getElementById('items-entrega');
-    const btnAgregar = document.getElementById('agregar-item-entrega');
-    if (!contenedor || !btnAgregar) return;
-
-    function actualizarBotonesQuitar() {
-      const filas = contenedor.querySelectorAll('.item-entrega');
-      filas.forEach((fila) => {
-        const btn = fila.querySelector('.boton-quitar');
-        if (btn) btn.disabled = filas.length <= 1;
-      });
-    }
-
-    btnAgregar.addEventListener('click', () => {
-      const primera = contenedor.querySelector('.item-entrega');
-      if (!primera) return;
-      const nueva = primera.cloneNode(true);
-      const select = nueva.querySelector('select');
-      const input = nueva.querySelector('input');
-      if (select) select.value = '';
-      if (input) input.value = '';
-      contenedor.appendChild(nueva);
-      actualizarBotonesQuitar();
-    });
-
-    contenedor.addEventListener('click', (e) => {
-      const btn = e.target.closest('.boton-quitar');
-      if (!btn || btn.disabled) return;
-      const fila = btn.closest('.item-entrega');
-      if (fila && contenedor.querySelectorAll('.item-entrega').length > 1) {
-        fila.remove();
-        actualizarBotonesQuitar();
-      }
-    });
-  })();
-</script>
 {% endblock %}
