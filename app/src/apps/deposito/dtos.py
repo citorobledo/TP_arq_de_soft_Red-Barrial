@@ -14,8 +14,10 @@ class ProductoDTO:
 class LoteDTO:
     id: int
     numero_lote: str
+    fecha_ingreso: date
     fecha_vencimiento: date
     stock: int
     nombre_voluntario: str
+    nombre_donante: str
     producto_id: int
     nombre_producto: str

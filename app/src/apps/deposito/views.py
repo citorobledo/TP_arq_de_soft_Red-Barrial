@@ -31,6 +31,10 @@ def deposito(request):
             try:
                 lote_id = int(request.POST.get("lote_id", "0"))
                 producto_id = int(request.POST.get("producto_id", "0"))
+                fecha_ingreso_str = request.POST.get("fecha_ingreso", "").strip()
+                fecha_ingreso = (
+                    date.fromisoformat(fecha_ingreso_str) if fecha_ingreso_str else None
+                )
                 voluntario = (
                     request.POST.get("nombre_voluntario", "").strip()
                     or request.user.get_full_name()
@@ -39,11 +43,13 @@ def deposito(request):
                 deposito_services.actualizar_lote(
                     lote_id,
                     numero_lote=request.POST.get("numero_lote", ""),
+                    fecha_ingreso=fecha_ingreso,
                     fecha_vencimiento=date.fromisoformat(
                         request.POST.get("vencimiento", "")
                     ),
                     stock=int(float(request.POST.get("cantidad", "0"))),
                     nombre_voluntario=voluntario,
+                    nombre_donante=request.POST.get("nombre_donante", ""),
                     producto_id=producto_id,
                 )
                 return redirect("deposito")
@@ -67,6 +73,10 @@ def deposito(request):
         else:
             try:
                 producto_id = int(request.POST.get("producto_id", "0"))
+                fecha_ingreso_str = request.POST.get("fecha_ingreso", "").strip()
+                fecha_ingreso = (
+                    date.fromisoformat(fecha_ingreso_str) if fecha_ingreso_str else None
+                )
                 voluntario = (
                     request.POST.get("nombre_voluntario", "").strip()
                     or request.user.get_full_name()
@@ -74,9 +84,11 @@ def deposito(request):
                 )
                 deposito_services.crear_lote(
                     numero_lote=request.POST.get("numero_lote", ""),
+                    fecha_ingreso=fecha_ingreso,
                     fecha_vencimiento=date.fromisoformat(request.POST.get("vencimiento", "")),
                     stock=int(float(request.POST.get("cantidad", "0"))),
                     nombre_voluntario=voluntario,
+                    nombre_donante=request.POST.get("nombre_donante", ""),
                     producto_id=producto_id,
                 )
                 return redirect("deposito")

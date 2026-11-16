@@ -39,9 +39,11 @@ def _to_dto(lote: Lote) -> LoteDTO:
     return LoteDTO(
         id=lote.id,
         numero_lote=lote.numero_lote,
+        fecha_ingreso=lote.fecha_ingreso,
         fecha_vencimiento=lote.fecha_vencimiento,
         stock=lote.stock,
         nombre_voluntario=lote.nombre_voluntario,
+        nombre_donante=lote.nombre_donante,
         producto_id=lote.producto_id,
         nombre_producto=lote.producto.nombre,
     )
@@ -112,6 +114,8 @@ def crear_lote(
     stock: int,
     nombre_voluntario: str,
     producto_id: int,
+    nombre_donante: str = "",
+    fecha_ingreso: Optional[date] = None,
 ) -> LoteDTO:
     """Crea un nuevo lote validando sus reglas de negocio."""
     lote = Lote(
@@ -119,8 +123,11 @@ def crear_lote(
         fecha_vencimiento=fecha_vencimiento,
         stock=stock,
         nombre_voluntario=nombre_voluntario.strip(),
+        nombre_donante=nombre_donante.strip(),
         producto_id=producto_id,
     )
+    if fecha_ingreso is not None:
+        lote.fecha_ingreso = fecha_ingreso
     repositories.guardar(lote)
     return _to_dto(repositories.obtener_por_id(lote.id))
 
@@ -130,21 +137,27 @@ def actualizar_lote(
     lote_id: int,
     *,
     numero_lote: Optional[str] = None,
+    fecha_ingreso: Optional[date] = None,
     fecha_vencimiento: Optional[date] = None,
     stock: Optional[int] = None,
     nombre_voluntario: Optional[str] = None,
+    nombre_donante: Optional[str] = None,
     producto_id: Optional[int] = None,
 ) -> LoteDTO:
     """Actualiza los campos provistos de un lote existente."""
     lote = repositories.obtener_por_id(lote_id, bloquear=True)
     if numero_lote is not None:
         lote.numero_lote = numero_lote.strip()
+    if fecha_ingreso is not None:
+        lote.fecha_ingreso = fecha_ingreso
     if fecha_vencimiento is not None:
         lote.fecha_vencimiento = fecha_vencimiento
     if stock is not None:
         lote.stock = stock
     if nombre_voluntario is not None:
         lote.nombre_voluntario = nombre_voluntario.strip()
+    if nombre_donante is not None:
+        lote.nombre_donante = nombre_donante.strip()
     if producto_id is not None:
         lote.producto_id = producto_id
 

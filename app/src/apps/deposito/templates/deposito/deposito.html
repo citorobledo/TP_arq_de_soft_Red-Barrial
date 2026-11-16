@@ -41,8 +41,10 @@
           <tr>
             <th>Lote</th>
             <th>Alimento</th>
+            <th>Ingreso</th>
             <th>Vencimiento</th>
             <th class="num">Stock</th>
+            <th>Donante</th>
             <th>Voluntario</th>
             <th>Acciones</th>
           </tr>
@@ -52,8 +54,10 @@
           <tr>
             <td><strong>{{ l.numero_lote }}</strong></td>
             <td>{{ l.nombre_producto }}</td>
+            <td>{{ l.fecha_ingreso }}</td>
             <td>{{ l.fecha_vencimiento }}</td>
             <td class="num">{{ l.stock }}</td>
+            <td>{{ l.nombre_donante|default:"—" }}</td>
             <td>{{ l.nombre_voluntario }}</td>
             <td>
               <div class="acciones-tabla">
@@ -63,8 +67,10 @@
                   data-id="{{ l.id }}"
                   data-producto-id="{{ l.producto_id }}"
                   data-numero="{{ l.numero_lote }}"
+                  data-ingreso="{{ l.fecha_ingreso|date:'Y-m-d' }}"
                   data-vencimiento="{{ l.fecha_vencimiento|date:'Y-m-d' }}"
                   data-stock="{{ l.stock }}"
+                  data-donante="{{ l.nombre_donante }}"
                   data-voluntario="{{ l.nombre_voluntario }}"
                 >Editar</button>
                 <form method="post" action="{% url 'deposito' %}" onsubmit="return confirm('¿Seguro que querés eliminar el lote {{ l.numero_lote }}?');">
@@ -78,7 +84,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="6" class="vacio">Todavía no hay lotes registrados en el depósito.</td>
+            <td colspan="8" class="vacio">Todavía no hay lotes registrados en el depósito.</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -108,10 +114,16 @@
           <input id="cantidad_ing" name="cantidad" type="number" min="1" step="1" required>
         </div>
         <div>
-          <label for="vencimiento">Vencimiento</label>
-          <input id="vencimiento" name="vencimiento" type="date" required>
+          <label for="fecha_ingreso">Fecha de ingreso</label>
+          <input id="fecha_ingreso" name="fecha_ingreso" type="date" value="{{ hoy }}" required>
         </div>
       </div>
+
+      <label for="vencimiento">Vencimiento</label>
+      <input id="vencimiento" name="vencimiento" type="date" required>
+
+      <label for="nombre_donante">Donante</label>
+      <input id="nombre_donante" name="nombre_donante" type="text" placeholder="Empresa o particular" required>
 
       <label for="nombre_voluntario">Voluntario</label>
       <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" required>
@@ -163,10 +175,16 @@
           <input id="edit_cantidad" name="cantidad" type="number" min="0" step="1" required>
         </div>
         <div>
-          <label for="edit_vencimiento">Vencimiento</label>
-          <input id="edit_vencimiento" name="vencimiento" type="date" required>
+          <label for="edit_fecha_ingreso">Fecha de ingreso</label>
+          <input id="edit_fecha_ingreso" name="fecha_ingreso" type="date" required>
         </div>
       </div>
+
+      <label for="edit_vencimiento">Vencimiento</label>
+      <input id="edit_vencimiento" name="vencimiento" type="date" required>
+
+      <label for="edit_donante">Donante</label>
+      <input id="edit_donante" name="nombre_donante" type="text" required>
 
       <label for="edit_voluntario">Voluntario</label>
       <input id="edit_voluntario" name="nombre_voluntario" type="text" required>
@@ -199,8 +217,10 @@
         document.getElementById('edit_lote_id').value = btn.dataset.id;
         document.getElementById('edit_producto_id').value = btn.dataset.productoId;
         document.getElementById('edit_numero_lote').value = btn.dataset.numero;
+        document.getElementById('edit_fecha_ingreso').value = btn.dataset.ingreso;
         document.getElementById('edit_vencimiento').value = btn.dataset.vencimiento;
         document.getElementById('edit_cantidad').value = btn.dataset.stock;
+        document.getElementById('edit_donante').value = btn.dataset.donante || '';
         document.getElementById('edit_voluntario').value = btn.dataset.voluntario;
         dialogEditar.showModal();
       });

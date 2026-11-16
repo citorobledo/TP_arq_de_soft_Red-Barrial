@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Producto(models.Model):
@@ -22,10 +23,16 @@ class Producto(models.Model):
 class Lote(models.Model):
     id = models.BigAutoField(primary_key=True, db_column="ID")
     numero_lote = models.CharField(max_length=50, unique=True, db_column="NumeroLote")
+    fecha_ingreso = models.DateField(
+        default=timezone.localdate, db_column="FechaDeIngreso"
+    )
     fecha_vencimiento = models.DateField(db_column="FechaVencimiento")
     stock = models.PositiveIntegerField(default=0, db_column="Stock")
     nombre_voluntario = models.CharField(
         max_length=100, db_column="NombreVoluntario"
+    )
+    nombre_donante = models.CharField(
+        max_length=150, blank=True, default="", db_column="NombreDonante"
     )
     producto = models.ForeignKey(
         Producto,
@@ -51,9 +58,11 @@ class Lote(models.Model):
         return {
             "id": self.id,
             "numero_lote": self.numero_lote,
+            "fecha_ingreso": self.fecha_ingreso.isoformat(),
             "fecha_vencimiento": self.fecha_vencimiento.isoformat(),
             "stock": self.stock,
             "nombre_producto": self.producto.nombre,
             "nombre_voluntario": self.nombre_voluntario,
+            "nombre_donante": self.nombre_donante,
             "id_producto": self.producto_id,
         }

@@ -51,6 +51,7 @@ class DepositoServicesTests(TestCase):
             fecha_vencimiento=date(2027, 3, 10),
             stock=50,
             nombre_voluntario="  Maria  ",
+            nombre_donante="  Supermercado Sol  ",
             producto_id=self.arroz.id,
         )
 
@@ -58,23 +59,31 @@ class DepositoServicesTests(TestCase):
         # POST
         self.assertEqual(self.lote.numero_lote, "L-001")
         self.assertEqual(self.lote.nombre_voluntario, "Maria")
+        self.assertEqual(self.lote.nombre_donante, "Supermercado Sol")
         
     def test_crud_lote_get(self):
         # GET
         obtenido = deposito_services.obtener_lote(self.lote.id)
         self.assertEqual(obtenido.stock, 50)
+        self.assertEqual(obtenido.fecha_ingreso, date.today())
         self.assertEqual(obtenido.nombre_producto, "Arroz")
         self.assertEqual(obtenido.nombre_voluntario, "Maria")
+        self.assertEqual(obtenido.nombre_donante, "Supermercado Sol")
 
     def test_crud_lote_put(self):
         # PUT
+        nueva_fecha = date(2026, 11, 1)
         actualizado = deposito_services.actualizar_lote(
             self.lote.id,
             stock=60,
+            fecha_ingreso=nueva_fecha,
             nombre_voluntario="Pedro",
+            nombre_donante="Panadería Sur",
         )
         self.assertEqual(actualizado.stock, 60)
+        self.assertEqual(actualizado.fecha_ingreso, nueva_fecha)
         self.assertEqual(actualizado.nombre_voluntario, "Pedro")
+        self.assertEqual(actualizado.nombre_donante, "Panadería Sur")
 
     def test_crud_lote_delete(self):
         # DELETE

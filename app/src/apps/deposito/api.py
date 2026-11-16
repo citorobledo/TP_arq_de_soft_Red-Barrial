@@ -60,26 +60,32 @@ def eliminar_producto(request, producto_id: int):
 # ============================================================================
 class LoteIn(Schema):
     numero_lote: str
+    fecha_ingreso: Optional[date] = None
     fecha_vencimiento: date
     stock: int
     nombre_voluntario: str
+    nombre_donante: str = ""
     producto_id: int
 
 
 class LoteUpdateIn(Schema):
     numero_lote: Optional[str] = None
+    fecha_ingreso: Optional[date] = None
     fecha_vencimiento: Optional[date] = None
     stock: Optional[int] = None
     nombre_voluntario: Optional[str] = None
+    nombre_donante: Optional[str] = None
     producto_id: Optional[int] = None
 
 
 class LoteOut(Schema):
     id: int
     numero_lote: str
+    fecha_ingreso: date
     fecha_vencimiento: date
     stock: int
     nombre_voluntario: str
+    nombre_donante: str
     producto_id: int
     nombre_producto: str
 
