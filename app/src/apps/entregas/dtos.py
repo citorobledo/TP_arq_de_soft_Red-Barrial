@@ -23,3 +23,4 @@ class EntregaDTO:
     nombre_voluntario: str
     comedor_id: int
     detalles: tuple[DetalleEntregaDTO, ...]
+    nombre_referente: str = ""

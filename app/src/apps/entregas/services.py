@@ -32,6 +32,7 @@ __all__ = [
     "crear_detalle_entrega",
     "actualizar_detalle_entrega",
     "eliminar_detalle_entrega",
+    "confirmar_recepcion",
 ]
 
 
@@ -52,6 +53,7 @@ def _entrega_to_dto(entrega: Entrega) -> EntregaDTO:
         fecha_registro=entrega.fecha_registro,
         fecha_confirmacion=entrega.fecha_confirmacion,
         nombre_voluntario=entrega.nombre_voluntario,
+        nombre_referente=entrega.nombre_referente,
         comedor_id=entrega.comedor_id,
         detalles=tuple(_detalle_to_dto(d) for d in entrega.detalles.all()),
     )
@@ -246,3 +248,29 @@ def eliminar_detalle_entrega(detalle_id: int) -> None:
     if detalle.entrega.estado != Entrega.Estado.ANULADA:
         deposito_services.restituir_stock(detalle.lote_id, detalle.cantidad)
     repositories.eliminar_detalle(detalle)
+
+@transaction.atomic
+def confirmar_recepcion(
+    entrega_id: int, *, usuario_id: int, nombre_referente: str
+) -> EntregaDTO:
+    """El referente del comedor confirma que recibió la entrega.
+
+    Solo el referente del comedor destinatario puede hacerlo. Es idempotente:
+    si ya estaba confirmada no se pisan la fecha ni el nombre (ADR-11).
+    """
+    entrega = repositories.obtener_entrega_por_id(entrega_id, bloquear=True)
+    if entrega.comedor.usuario_id != usuario_id:
+        raise ValidationError("La entrega no corresponde a un comedor de este referente.")
+    if entrega.estado == Entrega.Estado.CONFIRMADA:
+        return _entrega_to_dto(repositories.obtener_entrega_por_id(entrega.id))
+    if entrega.estado != Entrega.Estado.REGISTRADA:
+        raise ValidationError("Solo se puede recibir una entrega registrada.")
+    nombre = nombre_referente.strip()
+    if not nombre:
+        raise ValidationError({"nombre_referente": "El nombre del referente es obligatorio."})
+
+    entrega.estado = Entrega.Estado.CONFIRMADA
+    entrega.fecha_confirmacion = timezone.now()
+    entrega.nombre_referente = nombre
+    repositories.guardar_entrega(entrega)
+    return _entrega_to_dto(repositories.obtener_entrega_por_id(entrega.id))

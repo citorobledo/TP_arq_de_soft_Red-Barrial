@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Recepción de entregas · Red barrial{% endblock %}
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/comedor.css' %}">
+
+<section class="hero">
+  <svg class="sol" viewBox="0 0 64 64" aria-hidden="true">
+    <g stroke="#f6b40e" stroke-width="3" stroke-linecap="round">
+      <line x1="32" y1="2" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="62"/>
+      <line x1="2" y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="62" y2="32"/>
+      <line x1="10.8" y1="10.8" x2="17.9" y2="17.9"/><line x1="46.1" y1="46.1" x2="53.2" y2="53.2"/>
+      <line x1="10.8" y1="53.2" x2="17.9" y2="46.1"/><line x1="46.1" y1="17.9" x2="53.2" y2="10.8"/>
+    </g>
+    <circle cx="32" cy="32" r="13" fill="#f6b40e"/>
+  </svg>
+  <h1>Panel del referente de comedor</h1>
+  <p>Confirmá la llegada de cada entrega para dejar registrado quién la recibió y cuándo.</p>
+  {% if comedores %}<p class="comedores">Comedor: {% for c in comedores %}{{ c.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+</section>
+
+{% for m in messages %}<p class="aviso {{ m.tags }}" role="status">{{ m }}</p>{% endfor %}
+
+<section class="resumen dos">
+  <div class="dato alerta"><div class="valor">{{ pendientes|length }}</div><div class="etiqueta">Entregas por recibir</div></div>
+  <div class="dato"><div class="valor">{{ recibidas_hoy }}</div><div class="etiqueta">Recibidas hoy</div></div>
+</section>
+
+<section class="tarjeta">
+  <h2>Entregas por recibir</h2>
+  {% if pendientes %}
+  <div class="tabla-scroll"><table>
+    <thead><tr><th>Registrada</th><th>Lotes</th><th>Envió</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    {% for e in pendientes %}
+      <tr>
+        <td>{{ e.fecha_registro|date:"d/m H:i" }}</td>
+        <td>{% for d in e.detalles %}Lote #{{ d.lote_id }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+        <td>{{ e.nombre_voluntario }}</td>
+        <td><span class="etiqueta-tipo tipo-entrega">En camino</span></td>
+        <td>
+          <form method="post" action="{% url 'recibir_entrega' e.id %}">{% csrf_token %}
+            <button type="submit">Confirmar recepción</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="vacio">No hay entregas por recibir. Cuando el depósito despache una a tu comedor, va a aparecer acá.</p>
+  {% endif %}
+</section>
+
+<section class="tarjeta">
+  <h2>Recibidas</h2>
+  {% if recibidas %}
+  <div class="tabla-scroll"><table>
+    <thead><tr><th>Recibida</th><th>Lotes</th><th>Recibió</th><th>Estado</th></tr></thead>
+    <tbody>
+    {% for e in recibidas %}
+      <tr>
+        <td>{{ e.fecha_confirmacion|date:"d/m H:i" }}</td>
+        <td>{% for d in e.detalles %}Lote #{{ d.lote_id }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+        <td>{{ e.nombre_referente }}</td>
+        <td><span class="etiqueta-tipo tipo-ingreso">Recibida</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="vacio">Todavía no registraste recepciones.</p>
+  {% endif %}
+</section>
+{% endblock %}
