@@ -1,13 +1,18 @@
-"""Panel del coordinador: ve todo y exporta reportes."""
+"""Panel del coordinador: consulta el estado general a través de los servicios de cada módulo."""
 
 import csv
-from datetime import date
+from datetime import date, timedelta
 
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
+from apps.comedores import services as comedor_services
+from apps.deposito import services as deposito_services
+from apps.entregas import services as entrega_services
+from apps.seguridad import services as seguridad_services
 from apps.seguridad.decorators import rol_requerido
-from apps.seguridad.roles import COORDINADOR
+from apps.seguridad.roles import COORDINADOR, REFERENTE_COMEDOR
 
 # Reportes disponibles: clave -> (título, columnas, claves del diccionario de cada fila)
 REPORTES = {
@@ -35,19 +40,88 @@ ORIGEN_DATOS = {
 
 
 def _datos():
-    """Único lugar donde se obtienen los datos del coordinador.
+    """Obtiene la información del panel consumiendo únicamente los `services.py` de cada módulo."""
+    hoy = date.today()
+    limite_vencimiento = hoy + timedelta(days=7)
 
-    Todavía no hay consultas conectadas a los servicios, así que devuelve vacío.
-    Cada movimiento es un dict con: fecha, tipo ("ingreso" o "entrega"),
-    tipo_texto, alimento, lote, cantidad, contraparte. Cada lote por vencer:
-    alimento, lote, vence. Cada comedor: nombre, direccion, referente,
-    estado ("habilitado" o "no_habilitado") y estado_texto (lo que se muestra).
-    """
+    lotes = deposito_services.listar_lotes()
+    entregas = entrega_services.listar_entregas()
+    comedores_dtos = comedor_services.listar_comedores()
+
+    mapa_lotes = {l.id: l for l in lotes}
+    mapa_comedores = {c.id: f"{c.codigo} - {c.nombre}" for c in comedores_dtos}
+
+    movimientos = [
+        {
+            "fecha": l.fecha_ingreso,
+            "tipo": "ingreso",
+            "tipo_texto": "Ingreso",
+            "alimento": l.nombre_producto,
+            "lote": l.numero_lote,
+            "cantidad": l.stock,
+            "contraparte": l.nombre_donante or "Depósito",
+        }
+        for l in lotes
+    ]
+
+    for entrega in entregas:
+        if entrega.estado == "anulada":
+            continue
+        destino = mapa_comedores.get(entrega.comedor_id, f"Comedor #{entrega.comedor_id}")
+        for detalle in entrega.detalles:
+            lote_info = mapa_lotes.get(detalle.lote_id)
+            movimientos.append(
+                {
+                    "fecha": entrega.fecha,
+                    "tipo": "entrega",
+                    "tipo_texto": "Entrega",
+                    "alimento": lote_info.nombre_producto if lote_info else f"Lote #{detalle.lote_id}",
+                    "lote": lote_info.numero_lote if lote_info else f"#{detalle.lote_id}",
+                    "cantidad": detalle.cantidad,
+                    "contraparte": destino,
+                }
+            )
+
+    movimientos.sort(key=lambda m: m["fecha"], reverse=True)
+
+    lotes_por_vencer = [
+        {
+            "alimento": l.nombre_producto,
+            "lote": l.numero_lote,
+            "vence": l.fecha_vencimiento,
+        }
+        for l in lotes
+        if l.stock > 0 and l.fecha_vencimiento >= hoy
+    ][:10]
+
+    comedores = [
+        {
+            "nombre": f"{c.codigo} - {c.nombre}",
+            "direccion": c.direccion,
+            "referente": c.usuario_nombre,
+            "estado": "habilitado",
+            "estado_texto": "Habilitado",
+        }
+        for c in comedores_dtos
+    ]
+
     return {
-        "resumen": {"stock_kg": 0, "ingresos_hoy": 0, "entregas_hoy": 0, "por_vencer": 0},
-        "movimientos": [],
-        "lotes_por_vencer": [],
-        "comedores": [],
+        "resumen": {
+            "stock_kg": sum(l.stock for l in lotes),
+            "ingresos_hoy": sum(1 for l in lotes if l.fecha_ingreso == hoy),
+            "entregas_hoy": sum(
+                1 for e in entregas if e.fecha == hoy and e.estado != "anulada"
+            ),
+            "por_vencer": sum(
+                1
+                for l in lotes
+                if l.stock > 0 and hoy <= l.fecha_vencimiento <= limite_vencimiento
+            ),
+        },
+        "movimientos": movimientos,
+        "lotes_por_vencer": lotes_por_vencer,
+        "comedores": comedores,
+        "referentes": seguridad_services.listar_usuarios_por_rol(REFERENTE_COMEDOR),
         "reportes": [(clave, datos[0]) for clave, datos in REPORTES.items()],
     }
 
@@ -60,7 +134,34 @@ def _celda(valor):
 
 @rol_requerido(COORDINADOR)
 def coordinador(request):
-    return render(request, "reportes/coordinador.html", _datos())
+    error = None
+
+    if request.method == "POST":
+        try:
+            usuario_id = int(request.POST.get("usuario_id", "0"))
+            referentes_validos = {
+                r.id for r in seguridad_services.listar_usuarios_por_rol(REFERENTE_COMEDOR)
+            }
+            if usuario_id not in referentes_validos:
+                raise ValidationError(
+                    "El usuario seleccionado no tiene el rol 'referente_comedor'."
+                )
+
+            comedor_services.crear_comedor(
+                nombre=request.POST.get("nombre", ""),
+                codigo=request.POST.get("codigo", ""),
+                direccion=request.POST.get("direccion", ""),
+                usuario_id=usuario_id,
+            )
+            return redirect("coordinador")
+        except ValidationError as exc:
+            error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+        except ValueError:
+            error = "Verificá los datos ingresados para registrar el comedor."
+
+    contexto = _datos()
+    contexto["error"] = error
+    return render(request, "reportes/coordinador.html", contexto)
 
 
 @rol_requerido(COORDINADOR)

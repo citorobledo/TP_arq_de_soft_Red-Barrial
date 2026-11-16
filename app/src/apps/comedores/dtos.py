@@ -10,3 +10,4 @@ class ComedorDTO:
     codigo: str
     direccion: str
     usuario_id: int
+    usuario_nombre: str = ""

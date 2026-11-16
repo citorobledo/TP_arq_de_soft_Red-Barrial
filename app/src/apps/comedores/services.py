@@ -26,6 +26,7 @@ def _to_dto(comedor: Comedor) -> ComedorDTO:
         codigo=comedor.codigo,
         direccion=comedor.direccion,
         usuario_id=comedor.usuario_id,
+        usuario_nombre=comedor.usuario.get_full_name() or comedor.usuario.username,
     )
 
 
