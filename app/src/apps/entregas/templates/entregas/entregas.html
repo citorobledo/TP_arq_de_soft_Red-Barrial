@@ -83,28 +83,71 @@
         {% for c in comedores %}<option value="{{ c.id }}">{{ c.codigo }} - {{ c.nombre }}</option>{% endfor %}
       </select>
 
-      <label for="lote">Lote disponible (FEFO)</label>
-      <select id="lote" name="lote" required>
-        <option value="">Elegí un lote…</option>
-        {% for l in lotes %}<option value="{{ l.id }}">{{ l.descripcion }}</option>{% endfor %}
-      </select>
+      <label>Lotes y cantidades a entregar (FEFO)</label>
+      <div id="items-entrega" class="items-entrega">
+        <div class="item-entrega">
+          <select name="lote_id" aria-label="Lote disponible" required>
+            <option value="">Elegí un lote…</option>
+            {% for l in lotes %}<option value="{{ l.id }}">{{ l.descripcion }}</option>{% endfor %}
+          </select>
+          <input name="cantidad" type="number" min="1" step="1" placeholder="Cant." aria-label="Cantidad" required>
+          <button type="button" class="secundario boton-quitar" title="Quitar fila" disabled>×</button>
+        </div>
+      </div>
+
+      <button type="button" id="agregar-item-entrega" class="secundario boton-agregar-fila">+ Agregar otro lote / producto</button>
 
       <div class="fila">
-        <div>
-          <label for="cantidad_ent">Cantidad</label>
-          <input id="cantidad_ent" name="cantidad" type="number" min="1" step="1" required>
-        </div>
         <div>
           <label for="fecha">Fecha de entrega</label>
           <input id="fecha" name="fecha" type="date" value="{{ hoy }}" required>
         </div>
+        <div>
+          <label for="nombre_voluntario">Voluntario</label>
+          <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" required>
+        </div>
       </div>
-
-      <label for="nombre_voluntario">Voluntario</label>
-      <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" required>
 
       <button type="submit">Registrar entrega</button>
     </form>
   </div>
 </section>
+
+<script>
+  (function () {
+    const contenedor = document.getElementById('items-entrega');
+    const btnAgregar = document.getElementById('agregar-item-entrega');
+    if (!contenedor || !btnAgregar) return;
+
+    function actualizarBotonesQuitar() {
+      const filas = contenedor.querySelectorAll('.item-entrega');
+      filas.forEach((fila) => {
+        const btn = fila.querySelector('.boton-quitar');
+        if (btn) btn.disabled = filas.length <= 1;
+      });
+    }
+
+    btnAgregar.addEventListener('click', () => {
+      const primera = contenedor.querySelector('.item-entrega');
+      if (!primera) return;
+      const nueva = primera.cloneNode(true);
+      const select = nueva.querySelector('select');
+      const input = nueva.querySelector('input');
+      if (select) select.value = '';
+      if (input) input.value = '';
+      contenedor.appendChild(nueva);
+      actualizarBotonesQuitar();
+    });
+
+    contenedor.addEventListener('click', (e) => {
+      const btn = e.target.closest('.boton-quitar');
+      if (!btn || btn.disabled) return;
+      const fila = btn.closest('.item-entrega');
+      if (fila && contenedor.querySelectorAll('.item-entrega').length > 1) {
+        fila.remove();
+        actualizarBotonesQuitar();
+      }
+    });
+  })();
+</script>
 {% endblock %}

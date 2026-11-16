@@ -389,3 +389,36 @@ dialog.modal-dialog::backdrop {
   width: auto;
   margin-top: 0;
 }
+
+/* ---------- Entregas: múltiples lotes en una misma entrega ---------- */
+.items-entrega {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.item-entrega {
+  display: grid;
+  grid-template-columns: 1fr 84px 38px;
+  gap: 8px;
+  align-items: center;
+}
+.tarjeta form button.boton-quitar {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.tarjeta form button.boton-quitar:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.tarjeta form button.boton-agregar-fila {
+  margin-top: 10px;
+  width: 100%;
+  border-style: dashed;
+}

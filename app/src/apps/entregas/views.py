@@ -19,8 +19,16 @@ def entregas(request):
     if request.method == "POST":
         try:
             comedor_id = int(request.POST.get("comedor", "0"))
-            lote_id = int(request.POST.get("lote", "0"))
-            cantidad = int(float(request.POST.get("cantidad", "0")))
+            lote_ids = request.POST.getlist("lote_id")
+            cantidades = request.POST.getlist("cantidad")
+            detalles = [
+                {"lote_id": int(lid), "cantidad": int(float(qty))}
+                for lid, qty in zip(lote_ids, cantidades)
+                if lid and qty
+            ]
+            if not detalles:
+                raise ValidationError("Debés agregar al menos un lote con su cantidad.")
+
             fecha_str = request.POST.get("fecha", "").strip()
             fecha = date.fromisoformat(fecha_str) if fecha_str else date.today()
             voluntario = (
@@ -32,11 +40,13 @@ def entregas(request):
                 fecha=fecha,
                 nombre_voluntario=voluntario,
                 comedor_id=comedor_id,
-                detalles=[{"lote_id": lote_id, "cantidad": cantidad}],
+                detalles=detalles,
             )
             return redirect("entregas")
-        except (ValidationError, ValueError) as exc:
-            error = str(exc)
+        except ValidationError as exc:
+            error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+        except ValueError:
+            error = "Verificá los datos ingresados (comedor, lotes, cantidades y fecha)."
 
     hoy = date.today()
     limite_vencimiento = hoy + timedelta(days=7)
