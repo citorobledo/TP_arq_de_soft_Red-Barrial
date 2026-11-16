@@ -9,8 +9,6 @@ from apps.comedores import services as comedor_services
 from apps.deposito import services as deposito_services
 from apps.entregas import services as entrega_services
 from apps.entregas.models import DetalleEntrega, Entrega
-from apps.productos import services as producto_services
-from apps.comedores.models import Comedor
 
 from . import services
 from .models import Entrega
@@ -19,7 +17,7 @@ class EntregasServicesTests(TestCase):
     def setUp(self):
         User = get_user_model()
         self.user = User.objects.create_user(username="referente1")
-        self.producto = producto_services.crear_producto(nombre="Arroz")
+        self.producto = deposito_services.crear_producto(nombre="Arroz")
         self.lote1 = deposito_services.crear_lote(
             numero_lote="L-001",
             fecha_vencimiento=date(2027, 1, 15),
@@ -53,17 +51,17 @@ class EntregasServicesTests(TestCase):
     def test_crud_entrega_post(self):
         # POST
         self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)
-        self.assertEqual(self.entrega.detalles.count(), 2)
+        self.assertEqual(len(self.entrega.detalles), 2)
 
     def test_crud_entrega_get(self):
         # GET
         obtenido = entrega_services.obtener_entrega(self.entrega.id)
         self.assertEqual(obtenido.nombre_voluntario, "Ana")
-        self.assertEqual(obtenido.detalles.count(), 2)
+        self.assertEqual(len(obtenido.detalles), 2)
         self.assertEqual(
-                    entrega_services.listar_entregas(
+                    len(entrega_services.listar_entregas(
                         comedor_id=self.comedor.id, estado=Entrega.Estado.REGISTRADA
-                    ).count(),
+                    )),
                     1,
                 )
 
@@ -82,7 +80,7 @@ class EntregasServicesTests(TestCase):
                     {"lote_id": self.lote2.id, "cantidad": 999},
                 ],
             )
-        self.assertEqual(entrega_services.listar_entregas().count(), 0)
+        self.assertEqual(len(entrega_services.listar_entregas()), 0)
         self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 20)
         self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 10)
 
@@ -145,7 +143,7 @@ class EntregasServicesTests(TestCase):
         )
         self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 16)
         self.assertEqual(
-            entrega_services.listar_detalles_entrega(entrega_id=entrega.id).count(), 1
+            len(entrega_services.listar_detalles_entrega(entrega_id=entrega.id)), 1
         )
 
         # PUT detalle (cambia lote y cantidad)

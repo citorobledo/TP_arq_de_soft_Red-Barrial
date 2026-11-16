@@ -5,23 +5,45 @@ from typing import Optional
 from django.db import transaction
 
 from . import repositories
+from .dtos import ComedorDTO
 from .models import Comedor
+
+__all__ = [
+    "ComedorDTO",
+    "listar_comedores",
+    "obtener_comedor",
+    "obtener_comedor_por_codigo",
+    "crear_comedor",
+    "actualizar_comedor",
+    "eliminar_comedor",
+]
+
+
+def _to_dto(comedor: Comedor) -> ComedorDTO:
+    return ComedorDTO(
+        id=comedor.id,
+        nombre=comedor.nombre,
+        codigo=comedor.codigo,
+        direccion=comedor.direccion,
+        usuario_id=comedor.usuario_id,
+        usuario_nombre=comedor.usuario.get_full_name() or comedor.usuario.username,
+    )
 
 
 # --- GET (Lectura) ---
-def listar_comedores(*, usuario_id: Optional[int] = None):
+def listar_comedores(*, usuario_id: Optional[int] = None) -> list[ComedorDTO]:
     """Lista comedores con filtro opcional por usuario referente."""
-    return repositories.listar(usuario_id=usuario_id)
+    return [_to_dto(c) for c in repositories.listar(usuario_id=usuario_id)]
 
 
-def obtener_comedor(comedor_id: int) -> Comedor:
+def obtener_comedor(comedor_id: int) -> ComedorDTO:
     """Obtiene un comedor por su ID."""
-    return repositories.obtener_por_id(comedor_id)
+    return _to_dto(repositories.obtener_por_id(comedor_id))
 
 
-def obtener_comedor_por_codigo(codigo: str) -> Comedor:
+def obtener_comedor_por_codigo(codigo: str) -> ComedorDTO:
     """Obtiene un comedor por su código del padrón."""
-    return repositories.obtener_por_codigo(codigo.strip())
+    return _to_dto(repositories.obtener_por_codigo(codigo.strip()))
 
 
 # --- POST (Creación) ---
@@ -32,7 +54,7 @@ def crear_comedor(
     codigo: str,
     direccion: str,
     usuario_id: int,
-) -> Comedor:
+) -> ComedorDTO:
     """Crea un nuevo comedor validando sus datos."""
     comedor = Comedor(
         nombre=nombre.strip(),
@@ -41,7 +63,7 @@ def crear_comedor(
         usuario_id=usuario_id,
     )
     repositories.guardar(comedor)
-    return repositories.obtener_por_id(comedor.id)
+    return _to_dto(repositories.obtener_por_id(comedor.id))
 
 
 # --- PUT (Actualización) ---
@@ -53,7 +75,7 @@ def actualizar_comedor(
     codigo: Optional[str] = None,
     direccion: Optional[str] = None,
     usuario_id: Optional[int] = None,
-) -> Comedor:
+) -> ComedorDTO:
     """Actualiza los campos provistos de un comedor existente."""
     comedor = repositories.obtener_por_id(comedor_id, bloquear=True)
     if nombre is not None:
@@ -66,7 +88,7 @@ def actualizar_comedor(
         comedor.usuario_id = usuario_id
 
     repositories.guardar(comedor)
-    return repositories.obtener_por_id(comedor.id)
+    return _to_dto(repositories.obtener_por_id(comedor.id))
 
 
 # --- DELETE (Eliminación) ---

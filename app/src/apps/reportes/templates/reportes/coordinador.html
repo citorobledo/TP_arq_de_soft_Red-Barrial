@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block titulo %}Coordinador · Red barrial{% endblock %}
+
+{% block contenido %}
+<section class="hero">
+  <svg class="sol" viewBox="0 0 64 64" aria-hidden="true">
+    <g stroke="#f6b40e" stroke-width="3" stroke-linecap="round">
+      <line x1="32" y1="2" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="62"/>
+      <line x1="2" y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="62" y2="32"/>
+      <line x1="10.8" y1="10.8" x2="17.9" y2="17.9"/><line x1="46.1" y1="46.1" x2="53.2" y2="53.2"/>
+      <line x1="10.8" y1="53.2" x2="17.9" y2="46.1"/><line x1="46.1" y1="17.9" x2="53.2" y2="10.8"/>
+    </g>
+    <circle cx="32" cy="32" r="13" fill="#f6b40e"/>
+  </svg>
+  <h1>Panel del coordinador</h1>
+  <p>Seguí todo lo que pasa en el depósito y descargá reportes para compartir con el equipo.</p>
+</section>
+
+<section class="resumen" aria-label="Resumen del depósito">
+  <div class="dato"><div class="valor">{{ resumen.stock_kg|default:"0" }} </div><div class="etiqueta">Stock total</div></div>
+  <div class="dato"><div class="valor">{{ resumen.ingresos_hoy|default:"0" }}</div><div class="etiqueta">Ingresos de hoy</div></div>
+  <div class="dato"><div class="valor">{{ resumen.entregas_hoy|default:"0" }}</div><div class="etiqueta">Entregas de hoy</div></div>
+  <div class="dato alerta"><div class="valor">{{ resumen.por_vencer|default:"0" }}</div><div class="etiqueta">Lotes que vencen en 7 días</div></div>
+</section>
+
+<section class="tarjeta exportar">
+  <h2>Exportar reportes</h2>
+  <form method="get" action="{% url 'coordinador_exportar' %}">
+    <div class="campo">
+      <label for="reporte">Reporte</label>
+      <select id="reporte" name="reporte">
+        {% for clave, titulo in reportes %}<option value="{{ clave }}">{{ titulo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo" id="grupo-desde">
+      <label for="desde">Desde</label>
+      <input id="desde" name="desde" type="date">
+    </div>
+    <div class="campo" id="grupo-hasta">
+      <label for="hasta">Hasta</label>
+      <input id="hasta" name="hasta" type="date">
+    </div>
+    <button type="submit">Exportar CSV</button>
+  </form>
+  <p class="ayuda">Se descarga un archivo CSV que se abre directo en Excel. Podés filtrar por fechas en Ingresos, Entregas o Todos los movimientos.</p>
+</section>
+
+<script>
+  (function () {
+    const selReporte = document.getElementById('reporte');
+    const grupoDesde = document.getElementById('grupo-desde');
+    const grupoHasta = document.getElementById('grupo-hasta');
+    const conFecha = new Set(['ingresos', 'entregas', 'movimientos']);
+    function actualizarFechas() {
+      const mostrar = conFecha.has(selReporte.value);
+      grupoDesde.style.display = mostrar ? '' : 'none';
+      grupoHasta.style.display = mostrar ? '' : 'none';
+    }
+    if (selReporte) {
+      selReporte.addEventListener('change', actualizarFechas);
+      actualizarFechas();
+    }
+  })();
+</script>
+
+<section class="listados">
+  <div class="tarjeta">
+    <h2>Ingresos (Lotes)</h2>
+    <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Lote</th>
+          <th>Producto</th>
+          <th>Ingreso</th>
+          <th>Vencimiento</th>
+          <th class="num">Stock</th>
+          <th>Donante</th>
+          <th>Voluntario</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lotes_tabla %}
+        <tr>
+          <td>#{{ l.id }}</td>
+          <td><strong>{{ l.numero_lote }}</strong></td>
+          <td>{{ l.nombre_producto }}</td>
+          <td>{{ l.fecha_ingreso }}</td>
+          <td>{{ l.fecha_vencimiento }}</td>
+          <td class="num">{{ l.stock }}</td>
+          <td>{{ l.nombre_donante|default:"—" }}</td>
+          <td>{{ l.nombre_voluntario }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="vacio">Todavía no hay ingresos registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Próximos a vencer</h2>
+    <ul class="vencimientos">
+      {% for l in lotes_por_vencer %}
+      <li><span>{{ l.alimento }} <small>({{ l.lote }})</small></span><span class="cuando">{{ l.vence }}</span></li>
+      {% empty %}
+      <li class="vacio">No hay lotes por vencer.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="tarjeta comedores">
+  <h2>Entregas</h2>
+  <div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Fecha</th>
+        <th>Comedor</th>
+        <th>Detalle (Lote · Producto · Cant.)</th>
+        <th>Voluntario</th>
+        <th>Referente</th>
+        <th>Registro</th>
+        <th>Confirmación</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in entregas_tabla %}
+      <tr>
+        <td><strong>#{{ e.id }}</strong></td>
+        <td>{{ e.fecha }}</td>
+        <td>{{ e.comedor }}</td>
+        <td>
+          {% for d in e.detalles %}
+            <div>{{ d.numero_lote }} · {{ d.nombre_producto }} · <strong>{{ d.cantidad }}</strong></div>
+          {% empty %}
+            <span class="vacio">Sin detalles</span>
+          {% endfor %}
+        </td>
+        <td>{{ e.nombre_voluntario }}</td>
+        <td>{{ e.nombre_referente|default:"—" }}</td>
+        <td>{{ e.fecha_registro|date:"d/m/Y H:i"|default:"—" }}</td>
+        <td>{{ e.fecha_confirmacion|date:"d/m/Y H:i"|default:"—" }}</td>
+        <td><span class="etiqueta-tipo estado-{{ e.estado }}">{{ e.estado }}</span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" class="vacio">Todavía no hay entregas registradas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="listados comedores">
+  <div class="tarjeta">
+    <h2>Comedores</h2>
+    <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Comedor</th><th>Dirección</th><th>Referente</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {% for c in comedores %}
+        <tr>
+          <td>{{ c.nombre }}</td>
+          <td>{{ c.direccion }}</td>
+          <td>{{ c.referente }}</td>
+          <td><span class="etiqueta-tipo estado-{{ c.estado }}">{{ c.estado_texto }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="vacio">Todavía no hay comedores cargados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Registrar comedor</h2>
+    <form method="post" action="{% url 'coordinador' %}">
+      {% csrf_token %}
+      <label for="codigo_comedor">Código</label>
+      <input id="codigo_comedor" name="codigo" type="text" placeholder="Ej: CP-001" required>
+
+      <label for="nombre_comedor">Nombre</label>
+      <input id="nombre_comedor" name="nombre" type="text" placeholder="Ej: Comedor Esperanza" required>
+
+      <label for="direccion_comedor">Dirección</label>
+      <input id="direccion_comedor" name="direccion" type="text" placeholder="Ej: Av. Vergara 1234" required>
+
+      <label for="usuario_id">Referente (Keycloak · referente_comedor)</label>
+      <select id="usuario_id" name="usuario_id" required>
+        <option value="">Elegí un referente…</option>
+        {% for r in referentes %}
+          <option value="{{ r.id }}">{{ r.nombre_completo }} ({{ r.username }})</option>
+        {% endfor %}
+      </select>
+      {% if not referentes %}
+        <p class="ayuda">No hay referentes disponibles todavía. El usuario debe tener el rol <code>referente_comedor</code> en Keycloak y haber iniciado sesión al menos una vez.</p>
+      {% endif %}
+
+      <button type="submit">Guardar comedor</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

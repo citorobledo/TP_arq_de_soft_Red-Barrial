@@ -1,4 +1,4 @@
-"""Endpoints HTTP (Django Ninja) para Lotes de Depósito. Delego la lógica en `services.py`."""
+"""Endpoints HTTP (Django Ninja) para Productos y Lotes de Depósito."""
 
 from datetime import date
 from typing import Optional
@@ -8,36 +8,86 @@ from ninja import Router, Schema
 from . import services
 
 router = Router()
+productos_router = Router()
 
 
+# ============================================================================
+# PRODUCTOS
+# ============================================================================
+class ProductoIn(Schema):
+    nombre: str
+
+
+class ProductoOut(Schema):
+    id: int
+    nombre: str
+
+
+@productos_router.get("/", response=list[ProductoOut], summary="Listar productos")
+def listar_productos(request):
+    return services.listar_productos()
+
+
+@productos_router.get(
+    "/{producto_id}", response=ProductoOut, summary="Obtener un producto por ID"
+)
+def obtener_producto(request, producto_id: int):
+    return services.obtener_producto(producto_id)
+
+
+@productos_router.post("/", response={201: ProductoOut}, summary="Crear un producto")
+def crear_producto(request, payload: ProductoIn):
+    return 201, services.crear_producto(nombre=payload.nombre)
+
+
+@productos_router.put(
+    "/{producto_id}", response=ProductoOut, summary="Actualizar un producto"
+)
+def actualizar_producto(request, producto_id: int, payload: ProductoIn):
+    return services.actualizar_producto(producto_id, nombre=payload.nombre)
+
+
+@productos_router.delete(
+    "/{producto_id}", response={204: None}, summary="Eliminar un producto"
+)
+def eliminar_producto(request, producto_id: int):
+    services.eliminar_producto(producto_id)
+    return 204, None
+
+
+# ============================================================================
+# LOTES
+# ============================================================================
 class LoteIn(Schema):
     numero_lote: str
+    fecha_ingreso: Optional[date] = None
     fecha_vencimiento: date
     stock: int
     nombre_voluntario: str
+    nombre_donante: str = ""
     producto_id: int
 
 
 class LoteUpdateIn(Schema):
     numero_lote: Optional[str] = None
+    fecha_ingreso: Optional[date] = None
     fecha_vencimiento: Optional[date] = None
     stock: Optional[int] = None
     nombre_voluntario: Optional[str] = None
+    nombre_donante: Optional[str] = None
     producto_id: Optional[int] = None
 
 
 class LoteOut(Schema):
     id: int
     numero_lote: str
+    fecha_ingreso: date
     fecha_vencimiento: date
     stock: int
     nombre_voluntario: str
+    nombre_donante: str
     producto_id: int
     nombre_producto: str
-
-    @staticmethod
-    def resolve_nombre_producto(obj) -> str:
-        return obj.producto.nombre
 
 
 @router.get("/", response=list[LoteOut], summary="Listar lotes (orden FEFO)")

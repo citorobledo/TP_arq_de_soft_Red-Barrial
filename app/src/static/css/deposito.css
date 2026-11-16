@@ -302,3 +302,195 @@ dl.datos-usuario { align-items: start; }
 .rol-item { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 16px; }
 .rol-item:last-child { margin-bottom: 0; }
 a.boton-rol { padding: 8px 16px; font-size: .92rem; }
+
+/* ---------- Pestañas (Tabs) de navegación entre Depósito y Entregas ---------- */
+.tabs-nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--celeste-borde);
+  margin-bottom: 24px;
+  padding-bottom: 0;
+}
+.tabs-nav .tab {
+  padding: 10px 20px;
+  font-weight: 700;
+  color: var(--suave);
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-radius: 10px 10px 0 0;
+  margin-bottom: -2px;
+  transition: background .15s, color .15s;
+}
+.tabs-nav .tab:hover {
+  background: var(--celeste-claro);
+  color: var(--azul-oscuro);
+}
+.tabs-nav .tab.activo {
+  background: var(--blanco);
+  color: var(--azul);
+  border-color: var(--celeste-borde);
+  border-bottom-color: var(--azul);
+}
+
+/* ---------- Selector con botón "+" y modal de nuevo producto ---------- */
+.grupo-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.grupo-selector select {
+  flex: 1;
+}
+.tarjeta form button.boton-mas {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  line-height: 1;
+  border-radius: 9px;
+}
+
+dialog.modal-dialog {
+  border: 1px solid var(--celeste-borde);
+  border-radius: var(--radio);
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(15, 47, 74, .25);
+  background: var(--blanco);
+  color: var(--texto);
+}
+dialog.modal-dialog::backdrop {
+  background: rgba(15, 47, 74, .45);
+}
+.modal-contenido h2 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  color: var(--azul-oscuro);
+}
+.modal-contenido .ayuda {
+  margin: 0 0 14px;
+  color: var(--suave);
+  font-size: .9rem;
+}
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.modal-acciones button {
+  width: auto;
+  margin-top: 0;
+}
+
+/* ---------- Entregas: múltiples lotes en una misma entrega ---------- */
+.items-entrega {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.item-entrega {
+  display: grid;
+  grid-template-columns: 1fr 84px 38px;
+  gap: 8px;
+  align-items: center;
+}
+.tarjeta form button.boton-quitar {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.tarjeta form button.boton-quitar:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.tarjeta form button.boton-agregar-fila {
+  margin-top: 10px;
+  width: 100%;
+  border-style: dashed;
+}
+
+/* ---------- Acciones en tabla de lotes ---------- */
+.acciones-tabla {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.acciones-tabla form {
+  margin: 0;
+}
+button.boton-tabla {
+  padding: 4px 10px;
+  font-size: .8rem;
+  border-radius: 7px;
+}
+button.boton-peligro {
+  color: #a61b1b;
+  border-color: #d99b9b;
+}
+button.boton-peligro:hover {
+  background: #fde8e8;
+}
+
+/* ---------- Entregas: cabecera, estados y confirmación ---------- */
+.cabecera-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.cabecera-tarjeta h2 {
+  margin: 0;
+}
+.barra-volver {
+  margin-bottom: 18px;
+}
+.barra-volver .boton.secundario {
+  background: var(--blanco);
+  color: var(--azul-oscuro);
+  border: 1px solid var(--azul-oscuro);
+  padding: 7px 14px;
+}
+.barra-volver .boton.secundario:hover {
+  background: var(--celeste-claro);
+}
+.estado-registrada {
+  background: var(--celeste-claro);
+  color: var(--azul);
+}
+.estado-confirmada {
+  background: #dff3e7;
+  color: var(--ok);
+}
+.estado-anulada {
+  background: #fde8e8;
+  color: #a61b1b;
+}
+.resumen-confirmacion {
+  background: var(--fondo);
+  border: 1px solid var(--celeste-borde);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: .92rem;
+}
+.resumen-confirmacion p {
+  margin: 0 0 6px;
+}
+.resumen-confirmacion ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
