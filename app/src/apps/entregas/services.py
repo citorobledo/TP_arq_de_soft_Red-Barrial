@@ -42,6 +42,8 @@ def _detalle_to_dto(detalle: DetalleEntrega) -> DetalleEntregaDTO:
         entrega_id=detalle.entrega_id,
         lote_id=detalle.lote_id,
         cantidad=detalle.cantidad,
+        numero_lote=detalle.lote.numero_lote,
+        nombre_producto=detalle.lote.producto.nombre,
     )
 
 

@@ -65,24 +65,35 @@
 
 <section class="listados">
   <div class="tarjeta">
-    <h2>Últimos movimientos</h2>
+    <h2>Ingresos (Lotes)</h2>
     <div class="tabla-scroll">
     <table>
       <thead>
-        <tr><th>Fecha</th><th>Tipo</th><th>Alimento</th><th>Lote</th><th class="num">UNI</th><th>Origen / destino</th></tr>
+        <tr>
+          <th>#</th>
+          <th>Lote</th>
+          <th>Producto</th>
+          <th>Ingreso</th>
+          <th>Vencimiento</th>
+          <th class="num">Stock</th>
+          <th>Donante</th>
+          <th>Voluntario</th>
+        </tr>
       </thead>
       <tbody>
-        {% for m in movimientos %}
+        {% for l in lotes_tabla %}
         <tr>
-          <td>{{ m.fecha }}</td>
-          <td><span class="etiqueta-tipo tipo-{{ m.tipo }}">{{ m.tipo_texto }}</span></td>
-          <td>{{ m.alimento }}</td>
-          <td>{{ m.lote }}</td>
-          <td class="num">{{ m.cantidad }}</td>
-          <td>{{ m.contraparte }}</td>
+          <td>#{{ l.id }}</td>
+          <td><strong>{{ l.numero_lote }}</strong></td>
+          <td>{{ l.nombre_producto }}</td>
+          <td>{{ l.fecha_ingreso }}</td>
+          <td>{{ l.fecha_vencimiento }}</td>
+          <td class="num">{{ l.stock }}</td>
+          <td>{{ l.nombre_donante|default:"—" }}</td>
+          <td>{{ l.nombre_voluntario }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="6" class="vacio">Todavía no hay movimientos registrados.</td></tr>
+        <tr><td colspan="8" class="vacio">Todavía no hay ingresos registrados.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -98,6 +109,50 @@
       <li class="vacio">No hay lotes por vencer.</li>
       {% endfor %}
     </ul>
+  </div>
+</section>
+
+<section class="tarjeta comedores">
+  <h2>Entregas</h2>
+  <div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Fecha</th>
+        <th>Comedor</th>
+        <th>Detalle (Lote · Producto · Cant.)</th>
+        <th>Voluntario</th>
+        <th>Referente</th>
+        <th>Registro</th>
+        <th>Confirmación</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in entregas_tabla %}
+      <tr>
+        <td><strong>#{{ e.id }}</strong></td>
+        <td>{{ e.fecha }}</td>
+        <td>{{ e.comedor }}</td>
+        <td>
+          {% for d in e.detalles %}
+            <div>{{ d.numero_lote }} · {{ d.nombre_producto }} · <strong>{{ d.cantidad }}</strong></div>
+          {% empty %}
+            <span class="vacio">Sin detalles</span>
+          {% endfor %}
+        </td>
+        <td>{{ e.nombre_voluntario }}</td>
+        <td>{{ e.nombre_referente|default:"—" }}</td>
+        <td>{{ e.fecha_registro|date:"d/m/Y H:i"|default:"—" }}</td>
+        <td>{{ e.fecha_confirmacion|date:"d/m/Y H:i"|default:"—" }}</td>
+        <td><span class="etiqueta-tipo estado-{{ e.estado }}">{{ e.estado }}</span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" class="vacio">Todavía no hay entregas registradas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
   </div>
 </section>
 

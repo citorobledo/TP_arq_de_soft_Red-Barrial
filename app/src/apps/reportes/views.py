@@ -157,6 +157,21 @@ def _datos():
         for c in comedores_dtos
     ]
 
+    entregas_tabla = [
+        {
+            "id": e.id,
+            "fecha": e.fecha,
+            "comedor": mapa_comedores.get(e.comedor_id, f"Comedor #{e.comedor_id}"),
+            "estado": e.estado,
+            "fecha_registro": e.fecha_registro,
+            "fecha_confirmacion": e.fecha_confirmacion,
+            "nombre_voluntario": e.nombre_voluntario,
+            "nombre_referente": e.nombre_referente,
+            "detalles": e.detalles,
+        }
+        for e in entregas
+    ]
+
     return {
         "resumen": {
             "stock_kg": sum(l.stock for l in lotes),
@@ -166,6 +181,8 @@ def _datos():
             ),
             "por_vencer": len(lotes_por_vencer_7d),
         },
+        "lotes_tabla": sorted(lotes, key=lambda l: (l.fecha_ingreso, l.id), reverse=True),
+        "entregas_tabla": entregas_tabla,
         "ingresos": ingresos,
         "entregas_reporte": entregas_reporte,
         "movimientos": movimientos,

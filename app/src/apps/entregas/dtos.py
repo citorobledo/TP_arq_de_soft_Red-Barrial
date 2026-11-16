@@ -11,6 +11,8 @@ class DetalleEntregaDTO:
     entrega_id: int
     lote_id: int
     cantidad: int
+    numero_lote: str = ""
+    nombre_producto: str = ""
 
 
 @dataclass(frozen=True)

@@ -35,7 +35,7 @@
     {% for e in pendientes %}
       <tr>
         <td>{{ e.fecha_registro|date:"d/m H:i" }}</td>
-        <td>{% for d in e.detalles %}Lote #{{ d.lote_id }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+        <td>{% for d in e.detalles %}{{ d.numero_lote }} · {{ d.nombre_producto }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
         <td>{{ e.nombre_voluntario }}</td>
         <td><span class="etiqueta-tipo tipo-entrega">En camino</span></td>
         <td>
@@ -61,7 +61,7 @@
     {% for e in recibidas %}
       <tr>
         <td>{{ e.fecha_confirmacion|date:"d/m H:i" }}</td>
-        <td>{% for d in e.detalles %}Lote #{{ d.lote_id }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
+        <td>{% for d in e.detalles %}{{ d.numero_lote }} · {{ d.nombre_producto }} · {{ d.cantidad }}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td>
         <td>{{ e.nombre_referente }}</td>
         <td><span class="etiqueta-tipo tipo-ingreso">Recibida</span></td>
       </tr>
