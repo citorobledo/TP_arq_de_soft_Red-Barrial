@@ -1,10 +1,39 @@
-"""Capa de acceso a datos (ORM) para Lote."""
+"""Capa de acceso a datos (ORM) para Producto y Lote en el módulo Depósito."""
 
 from typing import Optional
 
-from .models import Lote
+from .models import Lote, Producto
 
 
+# ============================================================================
+# PRODUCTO — Repositorio ORM
+# ============================================================================
+def listar_productos():
+    """Devuelve todos los productos ordenados por nombre."""
+    return Producto.objects.all()
+
+
+def obtener_producto_por_id(producto_id: int, *, bloquear: bool = False) -> Producto:
+    """Obtiene un producto por su ID o lanza Producto.DoesNotExist."""
+    qs = Producto.objects.select_for_update() if bloquear else Producto.objects.all()
+    return qs.get(pk=producto_id)
+
+
+def guardar_producto(producto: Producto) -> Producto:
+    """Valida las restricciones del modelo y persiste el producto en SQLite."""
+    producto.full_clean()
+    producto.save()
+    return producto
+
+
+def eliminar_producto(producto: Producto) -> None:
+    """Elimina la instancia de Producto de la base de datos."""
+    producto.delete()
+
+
+# ============================================================================
+# LOTE — Repositorio ORM
+# ============================================================================
 def listar(*, solo_con_stock: bool = False, producto_id: Optional[int] = None):
     """Lista lotes ordenados por fecha de vencimiento (FEFO), precargando Producto."""
     qs = Lote.objects.select_related("producto").all()

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}Depósito · Red barrial{% endblock %}
+{% block titulo %}Depósito y Lotes · Red barrial{% endblock %}
 
 {% block contenido %}
 <section class="hero">
@@ -13,60 +13,121 @@
     <circle cx="32" cy="32" r="13" fill="#f6b40e"/>
   </svg>
   <h1>Panel del voluntario de depósito</h1>
-  <p>Registrá los ingresos de donaciones y las entregas a comedores habilitados, y controlá qué lote vence primero.</p>
+  <p>Registrá los ingresos de lotes de donaciones y controlá el stock disponible ordenado por vencimiento (FEFO).</p>
 </section>
 
+<nav class="tabs-nav" aria-label="Navegación de depósito">
+  <a class="tab activo" href="{% url 'deposito' %}" aria-current="page">Depósito y Lotes</a>
+  <a class="tab" href="{% url 'entregas' %}">Entregas a Comedores</a>
+</nav>
+
 <section class="resumen" aria-label="Resumen del depósito">
-  <div class="dato"><div class="valor">{{ resumen.stock_kg|default:"0" }} </div><div class="etiqueta">Stock total</div></div>
-  <div class="dato"><div class="valor">{{ resumen.ingresos_hoy|default:"0" }}</div><div class="etiqueta">Ingresos de hoy</div></div>
-  <div class="dato"><div class="valor">{{ resumen.entregas_hoy|default:"0" }}</div><div class="etiqueta">Entregas de hoy</div></div>
+  <div class="dato"><div class="valor">{{ resumen.stock_kg|default:"0" }}</div><div class="etiqueta">Stock total (unidades)</div></div>
+  <div class="dato"><div class="valor">{{ resumen.lotes_con_stock|default:"0" }}</div><div class="etiqueta">Lotes con stock</div></div>
+  <div class="dato"><div class="valor">{{ resumen.lotes_totales|default:"0" }}</div><div class="etiqueta">Lotes registrados</div></div>
   <div class="dato alerta"><div class="valor">{{ resumen.por_vencer|default:"0" }}</div><div class="etiqueta">Lotes que vencen en 7 días</div></div>
 </section>
 
-<section class="formularios">
-  {# TODO: cambiar action="#" por la URL de la vista que guarda el ingreso #}
+{% if error %}
+  <p class="aviso-rol" role="alert">{{ error }}</p>
+{% endif %}
+
+<section class="listados">
   <div class="tarjeta">
-    <h2>Registrar ingreso</h2>
-    <form method="post" action="#">
+    <h2>Lotes en depósito</h2>
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Lote</th>
+            <th>Alimento</th>
+            <th>Vencimiento</th>
+            <th class="num">Stock</th>
+            <th>Voluntario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in lotes %}
+          <tr>
+            <td><strong>{{ l.numero_lote }}</strong></td>
+            <td>{{ l.nombre_producto }}</td>
+            <td>{{ l.fecha_vencimiento }}</td>
+            <td class="num">{{ l.stock }}</td>
+            <td>{{ l.nombre_voluntario }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="vacio">Todavía no hay lotes registrados en el depósito.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Registrar ingreso de lote</h2>
+    <form method="post" action="{% url 'deposito' %}">
       {% csrf_token %}
-      <label for="donante">Donante</label>
-      <input id="donante" name="donante" type="text" placeholder="Empresa o particular" required>
-      <label for="alimento">Alimento</label>
-      <input id="alimento" name="alimento" type="text" placeholder="Ej: Arroz, leche, fideos" required>
+      <label for="producto_id">Alimento (Producto)</label>
+      <div class="grupo-selector">
+        <select id="producto_id" name="producto_id" required>
+          <option value="">Elegí un producto…</option>
+          {% for p in productos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}
+        </select>
+        <button type="button" class="boton-mas" id="abrir-modal-producto" title="Agregar nuevo producto">+</button>
+      </div>
+
       <label for="numero_lote">Número de lote</label>
       <input id="numero_lote" name="numero_lote" type="text" placeholder="Ej: L-0142" required>
+
       <div class="fila">
         <div>
           <label for="cantidad_ing">Cantidad</label>
-          <input id="cantidad_ing" name="cantidad" type="number" min="0" step="0.1" required>
+          <input id="cantidad_ing" name="cantidad" type="number" min="1" step="1" required>
         </div>
         <div>
           <label for="vencimiento">Vencimiento</label>
           <input id="vencimiento" name="vencimiento" type="date" required>
         </div>
       </div>
-      <button type="submit">Guardar ingreso</button>
-    </form>
-  </div>
 
-  {# TODO: cambiar action="#" por la URL de la vista que guarda la entrega #}
-  <div class="tarjeta">
-    <h2>Registrar entrega</h2>
-    <form method="post" action="#">
-      {% csrf_token %}
-      <label for="comedor">Comedor habilitado</label>
-      <select id="comedor" name="comedor" required>
-        <option value="">Elegí un comedor…</option>
-        {% for c in comedores %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}
-      </select>
-      <label for="lote">Lote</label>
-      <select id="lote" name="lote" required>
-        <option value="">Elegí un lote…</option>
-        {% for l in lotes %}<option value="{{ l.id }}">{{ l.descripcion }}</option>{% endfor %}
-      </select>
-      
+      <label for="nombre_voluntario">Voluntario</label>
+      <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" required>
+
+      <button type="submit">Guardar lote</button>
     </form>
   </div>
 </section>
 
+{# Modal para crear un nuevo producto sin salir de la pantalla #}
+<dialog id="dialogo-producto" class="modal-dialog">
+  <div class="modal-contenido">
+    <h2>Nuevo producto</h2>
+    <p class="ayuda">Ingresá el nombre del alimento para agregarlo al catálogo.</p>
+    <form method="post" action="{% url 'deposito' %}">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="crear_producto">
+      <label for="nombre_nuevo_producto">Nombre del alimento</label>
+      <input id="nombre_nuevo_producto" name="nombre" type="text" placeholder="Ej: Fideos, Arroz, Leche" required>
+      <div class="modal-acciones">
+        <button type="button" class="secundario" id="cancelar-modal-producto">Cancelar</button>
+        <button type="submit">Guardar producto</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('dialogo-producto');
+  const btnAbrir = document.getElementById('abrir-modal-producto');
+  const btnCerrar = document.getElementById('cancelar-modal-producto');
+  if (btnAbrir && dialog) {
+    btnAbrir.addEventListener('click', () => dialog.showModal());
+    btnCerrar.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  }
+</script>
 {% endblock %}

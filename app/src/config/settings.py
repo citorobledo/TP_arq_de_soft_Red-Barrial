@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "mozilla_django_oidc",
     "apps.seguridad",
-    "apps.productos",
     "apps.deposito",
     "apps.comedores",
     "apps.entregas",

@@ -10,9 +10,9 @@ from ninja.errors import HttpError
 from ninja.errors import ValidationError as NinjaValidationError
 
 from apps.comedores.api import router as comedores_router
+from apps.deposito.api import productos_router
 from apps.deposito.api import router as deposito_router
 from apps.entregas.api import router as entregas_router
-from apps.productos.api import router as productos_router
 
 # Para exigir sesión OIDC de Keycloak en toda la API, importar `django_auth` de `ninja.security`
 # y pasar `auth=django_auth` al instanciar NinjaAPI.

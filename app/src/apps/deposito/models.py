@@ -1,6 +1,24 @@
 from django.db import models
 
 
+class Producto(models.Model):
+    id = models.BigAutoField(primary_key=True, db_column="ID")
+    nombre = models.CharField(max_length=120, unique=True, db_column="Nombre")
+
+    class Meta:
+        db_table = "Producto"
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+        }
+
+
 class Lote(models.Model):
     id = models.BigAutoField(primary_key=True, db_column="ID")
     numero_lote = models.CharField(max_length=50, unique=True, db_column="NumeroLote")
@@ -10,7 +28,7 @@ class Lote(models.Model):
         max_length=100, db_column="NombreVoluntario"
     )
     producto = models.ForeignKey(
-        "productos.Producto",
+        Producto,
         on_delete=models.PROTECT,
         related_name="lotes",
         db_column="ID_Producto",

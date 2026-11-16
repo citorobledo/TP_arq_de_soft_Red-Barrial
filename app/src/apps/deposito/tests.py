@@ -1,17 +1,51 @@
 from datetime import date
 
 from django.core.exceptions import ValidationError
+from django.db.models import ProtectedError
 from django.test import TestCase
 
 from apps.deposito import services as deposito_services
-from apps.deposito.models import Lote
-from apps.productos import services as producto_services
+from apps.deposito.models import Lote, Producto
+
+
+class ProductoServicesTests(TestCase):
+    def setUp(self):
+        self.prod = deposito_services.crear_producto(nombre="  Arroz Largo Fino  ")
+
+    def test_crud_producto(self):
+        self.assertEqual(self.prod.nombre, "Arroz Largo Fino")
+        self.assertEqual(deposito_services.obtener_producto(self.prod.id).nombre, "Arroz Largo Fino")
+        self.assertEqual(len(deposito_services.listar_productos()), 1)
+
+        actualizado = deposito_services.actualizar_producto(self.prod.id, nombre="Arroz Integral")
+        self.assertEqual(actualizado.nombre, "Arroz Integral")
+
+        deposito_services.eliminar_producto(self.prod.id)
+        self.assertEqual(len(deposito_services.listar_productos()), 0)
+        with self.assertRaises(Producto.DoesNotExist):
+            deposito_services.obtener_producto(self.prod.id)
+
+    def test_no_permite_nombre_duplicado(self):
+        deposito_services.crear_producto(nombre="Fideos")
+        with self.assertRaises(ValidationError):
+            deposito_services.crear_producto(nombre="Fideos")
+
+    def test_no_permite_eliminar_producto_con_lotes(self):
+        deposito_services.crear_lote(
+            numero_lote="L-PROT",
+            fecha_vencimiento=date(2027, 6, 1),
+            stock=10,
+            nombre_voluntario="Juan",
+            producto_id=self.prod.id,
+        )
+        with self.assertRaises(ProtectedError):
+            deposito_services.eliminar_producto(self.prod.id)
 
 
 class DepositoServicesTests(TestCase):
     def setUp(self):
-        self.arroz = producto_services.crear_producto(nombre="Arroz")
-        self.fideos = producto_services.crear_producto(nombre="Fideos")
+        self.arroz = deposito_services.crear_producto(nombre="Arroz")
+        self.fideos = deposito_services.crear_producto(nombre="Fideos")
         self.lote = deposito_services.crear_lote(
             numero_lote="  L-001  ",
             fecha_vencimiento=date(2027, 3, 10),

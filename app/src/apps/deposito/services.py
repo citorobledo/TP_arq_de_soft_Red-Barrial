@@ -1,4 +1,4 @@
-"""Casos de uso y reglas de negocio para Lote (independientes de HTTP y del ORM)."""
+"""Casos de uso y reglas de negocio para Producto y Lote (independientes de HTTP y del ORM)."""
 
 from datetime import date
 from typing import Optional
@@ -7,11 +7,17 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from . import repositories
-from .dtos import LoteDTO
-from .models import Lote
+from .dtos import LoteDTO, ProductoDTO
+from .models import Lote, Producto
 
 __all__ = [
+    "ProductoDTO",
     "LoteDTO",
+    "listar_productos",
+    "obtener_producto",
+    "crear_producto",
+    "actualizar_producto",
+    "eliminar_producto",
     "listar_lotes",
     "obtener_lote",
     "crear_lote",
@@ -20,6 +26,13 @@ __all__ = [
     "descontar_stock",
     "restituir_stock",
 ]
+
+
+def _producto_to_dto(producto: Producto) -> ProductoDTO:
+    return ProductoDTO(
+        id=producto.id,
+        nombre=producto.nombre,
+    )
 
 
 def _to_dto(lote: Lote) -> LoteDTO:
@@ -34,7 +47,44 @@ def _to_dto(lote: Lote) -> LoteDTO:
     )
 
 
-# --- GET (Lectura) ---
+# ============================================================================
+# PRODUCTO — Casos de Uso (GET, POST, PUT, DELETE)
+# ============================================================================
+def listar_productos() -> list[ProductoDTO]:
+    """Devuelve el catálogo completo de productos."""
+    return [_producto_to_dto(p) for p in repositories.listar_productos()]
+
+
+def obtener_producto(producto_id: int) -> ProductoDTO:
+    """Obtiene un producto por su ID."""
+    return _producto_to_dto(repositories.obtener_producto_por_id(producto_id))
+
+
+@transaction.atomic
+def crear_producto(*, nombre: str) -> ProductoDTO:
+    """Crea un nuevo producto normalizando su nombre."""
+    producto = Producto(nombre=nombre.strip())
+    return _producto_to_dto(repositories.guardar_producto(producto))
+
+
+@transaction.atomic
+def actualizar_producto(producto_id: int, *, nombre: str) -> ProductoDTO:
+    """Actualiza el nombre de un producto existente."""
+    producto = repositories.obtener_producto_por_id(producto_id, bloquear=True)
+    producto.nombre = nombre.strip()
+    return _producto_to_dto(repositories.guardar_producto(producto))
+
+
+@transaction.atomic
+def eliminar_producto(producto_id: int) -> None:
+    """Elimina un producto (lanza ProtectedError si tiene lotes asociados)."""
+    producto = repositories.obtener_producto_por_id(producto_id, bloquear=True)
+    repositories.eliminar_producto(producto)
+
+
+# ============================================================================
+# LOTE — Casos de Uso (GET, POST, PUT, DELETE)
+# ============================================================================
 def listar_lotes(
     *,
     solo_con_stock: bool = False,
@@ -54,7 +104,6 @@ def obtener_lote(lote_id: int) -> LoteDTO:
     return _to_dto(repositories.obtener_por_id(lote_id))
 
 
-# --- POST (Creación) ---
 @transaction.atomic
 def crear_lote(
     *,
@@ -76,7 +125,6 @@ def crear_lote(
     return _to_dto(repositories.obtener_por_id(lote.id))
 
 
-# --- PUT (Actualización) ---
 @transaction.atomic
 def actualizar_lote(
     lote_id: int,
@@ -104,7 +152,6 @@ def actualizar_lote(
     return _to_dto(repositories.obtener_por_id(lote.id))
 
 
-# --- DELETE (Eliminación) ---
 @transaction.atomic
 def eliminar_lote(lote_id: int) -> None:
     """Elimina un lote por ID (lanza ProtectedError si tiene entregas asociadas)."""

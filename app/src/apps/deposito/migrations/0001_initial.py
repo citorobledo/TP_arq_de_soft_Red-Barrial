@@ -5,11 +5,34 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     initial = True
 
-    dependencies = [
-        ("productos", "0001_initial"),
-    ]
+    dependencies = []
 
     operations = [
+        migrations.CreateModel(
+            name="Producto",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        db_column="ID",
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "nombre",
+                    models.CharField(
+                        db_column="Nombre",
+                        max_length=120,
+                        unique=True,
+                    ),
+                ),
+            ],
+            options={
+                "db_table": "Producto",
+                "ordering": ["nombre"],
+            },
+        ),
         migrations.CreateModel(
             name="Lote",
             fields=[
@@ -44,7 +67,7 @@ class Migration(migrations.Migration):
                     "nombre_voluntario",
                     models.CharField(
                         db_column="NombreVoluntario",
-                        max_length=100
+                        max_length=100,
                     ),
                 ),
                 (
@@ -53,7 +76,7 @@ class Migration(migrations.Migration):
                         db_column="ID_Producto",
                         on_delete=django.db.models.deletion.PROTECT,
                         related_name="lotes",
-                        to="productos.Producto",
+                        to="deposito.producto",
                     ),
                 ),
             ],

@@ -9,14 +9,13 @@ from apps.comedores import services as comedor_services
 from apps.deposito import services as deposito_services
 from apps.entregas import services as entrega_services
 from apps.entregas.models import DetalleEntrega, Entrega
-from apps.productos import services as producto_services
 
 
 class EntregasServicesTests(TestCase):
     def setUp(self):
         User = get_user_model()
         self.user = User.objects.create_user(username="referente1")
-        self.producto = producto_services.crear_producto(nombre="Arroz")
+        self.producto = deposito_services.crear_producto(nombre="Arroz")
         self.lote1 = deposito_services.crear_lote(
             numero_lote="L-001",
             fecha_vencimiento=date(2027, 1, 15),

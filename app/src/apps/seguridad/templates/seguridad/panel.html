@@ -23,11 +23,12 @@
     <dt class="dt-roles">Roles</dt>
     <dd>
       {% url 'deposito' as url_deposito %}
+      {% url 'entregas' as url_entregas %}
       {% url 'coordinador' as url_coordinador %}
       {% for rol in roles %}
       <div class="rol-item">
         <span class="chip-rol">{{ rol }}</span>
-        {% if rol == "voluntario_deposito" and url_deposito %}<a class="boton boton-rol" href="{{ url_deposito }}">Ir al panel de depósito</a>{% elif rol == "coordinador" and url_coordinador %}<a class="boton boton-rol" href="{{ url_coordinador }}">Ir al panel del coordinador</a>{% endif %}
+        {% if rol == "voluntario_deposito" and url_deposito %}<a class="boton boton-rol" href="{{ url_deposito }}">Ir a Depósito y Lotes</a>{% if url_entregas %}<a class="boton boton-rol" href="{{ url_entregas }}">Ir a Entregas</a>{% endif %}{% elif rol == "coordinador" and url_coordinador %}<a class="boton boton-rol" href="{{ url_coordinador }}">Ir al panel del coordinador</a>{% endif %}
       </div>
       {% empty %}—{% endfor %}
     </dd>
