@@ -1,7 +1,8 @@
-"""Panel del coordinador: consulta el estado general a través de los servicios de cada módulo."""
+"""Panel del coordinador: consulta el estado general y exporta reportes CSV."""
 
 import csv
 from datetime import date, timedelta
+from typing import Optional
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -16,15 +17,25 @@ from apps.seguridad.roles import COORDINADOR, REFERENTE_COMEDOR
 
 # Reportes disponibles: clave -> (título, columnas, claves del diccionario de cada fila)
 REPORTES = {
+    "ingresos": (
+        "Ingresos",
+        ["Fecha ingreso", "Alimento", "Lote", "Stock", "Donante", "Voluntario"],
+        ["fecha", "alimento", "lote", "cantidad", "contraparte", "voluntario"],
+    ),
+    "entregas": (
+        "Entregas",
+        ["Fecha", "Comedor", "Alimento", "Lote", "Cantidad", "Estado", "Voluntario"],
+        ["fecha", "contraparte", "alimento", "lote", "cantidad", "estado", "voluntario"],
+    ),
     "movimientos": (
-        "Movimientos",
-        ["Fecha", "Tipo", "Alimento", "Lote", "Kg", "Origen / destino"],
+        "Todos los movimientos",
+        ["Fecha", "Tipo", "Alimento", "Lote", "Cantidad", "Origen / destino"],
         ["fecha", "tipo_texto", "alimento", "lote", "cantidad", "contraparte"],
     ),
     "vencimientos": (
-        "Lotes por vencer",
-        ["Alimento", "Lote", "Vence"],
-        ["alimento", "lote", "vence"],
+        "Lotes por vencer (próximos 7 días)",
+        ["Alimento", "Lote", "Vence", "Stock", "Donante"],
+        ["alimento", "lote", "vence", "stock", "donante"],
     ),
     "comedores": (
         "Comedores",
@@ -33,10 +44,32 @@ REPORTES = {
     ),
 }
 ORIGEN_DATOS = {
+    "ingresos": "ingresos",
+    "entregas": "entregas_reporte",
     "movimientos": "movimientos",
-    "vencimientos": "lotes_por_vencer",
+    "vencimientos": "lotes_por_vencer_7d",
     "comedores": "comedores",
 }
+REPORTES_CON_FECHA = {"ingresos", "entregas", "movimientos"}
+
+
+def _parse_fecha(valor: str) -> Optional[date]:
+    texto = (valor or "").strip()
+    if not texto:
+        return None
+    try:
+        return date.fromisoformat(texto)
+    except ValueError:
+        return None
+
+
+def _filtrar_por_fecha(filas: list[dict], desde: Optional[date], hasta: Optional[date]) -> list[dict]:
+    resultado = filas
+    if desde is not None:
+        resultado = [f for f in resultado if f["fecha"] >= desde]
+    if hasta is not None:
+        resultado = [f for f in resultado if f["fecha"] <= hasta]
+    return resultado
 
 
 def _datos():
@@ -51,7 +84,7 @@ def _datos():
     mapa_lotes = {l.id: l for l in lotes}
     mapa_comedores = {c.id: f"{c.codigo} - {c.nombre}" for c in comedores_dtos}
 
-    movimientos = [
+    ingresos = [
         {
             "fecha": l.fecha_ingreso,
             "tipo": "ingreso",
@@ -60,17 +93,18 @@ def _datos():
             "lote": l.numero_lote,
             "cantidad": l.stock,
             "contraparte": l.nombre_donante or "Depósito",
+            "voluntario": l.nombre_voluntario,
         }
         for l in lotes
     ]
+    ingresos.sort(key=lambda m: m["fecha"], reverse=True)
 
+    entregas_reporte = []
     for entrega in entregas:
-        if entrega.estado == "anulada":
-            continue
         destino = mapa_comedores.get(entrega.comedor_id, f"Comedor #{entrega.comedor_id}")
         for detalle in entrega.detalles:
             lote_info = mapa_lotes.get(detalle.lote_id)
-            movimientos.append(
+            entregas_reporte.append(
                 {
                     "fecha": entrega.fecha,
                     "tipo": "entrega",
@@ -79,10 +113,28 @@ def _datos():
                     "lote": lote_info.numero_lote if lote_info else f"#{detalle.lote_id}",
                     "cantidad": detalle.cantidad,
                     "contraparte": destino,
+                    "estado": entrega.estado,
+                    "voluntario": entrega.nombre_voluntario,
                 }
             )
+    entregas_reporte.sort(key=lambda m: m["fecha"], reverse=True)
 
+    movimientos = ingresos + [
+        e for e in entregas_reporte if e["estado"] != "anulada"
+    ]
     movimientos.sort(key=lambda m: m["fecha"], reverse=True)
+
+    lotes_por_vencer_7d = [
+        {
+            "alimento": l.nombre_producto,
+            "lote": l.numero_lote,
+            "vence": l.fecha_vencimiento,
+            "stock": l.stock,
+            "donante": l.nombre_donante or "—",
+        }
+        for l in lotes
+        if l.stock > 0 and hoy <= l.fecha_vencimiento <= limite_vencimiento
+    ]
 
     lotes_por_vencer = [
         {
@@ -112,14 +164,13 @@ def _datos():
             "entregas_hoy": sum(
                 1 for e in entregas if e.fecha == hoy and e.estado != "anulada"
             ),
-            "por_vencer": sum(
-                1
-                for l in lotes
-                if l.stock > 0 and hoy <= l.fecha_vencimiento <= limite_vencimiento
-            ),
+            "por_vencer": len(lotes_por_vencer_7d),
         },
+        "ingresos": ingresos,
+        "entregas_reporte": entregas_reporte,
         "movimientos": movimientos,
         "lotes_por_vencer": lotes_por_vencer,
+        "lotes_por_vencer_7d": lotes_por_vencer_7d,
         "comedores": comedores,
         "referentes": seguridad_services.listar_usuarios_por_rol(REFERENTE_COMEDOR),
         "reportes": [(clave, datos[0]) for clave, datos in REPORTES.items()],
@@ -169,8 +220,14 @@ def exportar_reportes(request):
     clave = request.GET.get("reporte", "movimientos")
     if clave not in REPORTES:
         clave = "movimientos"
+
     _, columnas, campos = REPORTES[clave]
     filas = _datos()[ORIGEN_DATOS[clave]]
+
+    if clave in REPORTES_CON_FECHA:
+        desde = _parse_fecha(request.GET.get("desde", ""))
+        hasta = _parse_fecha(request.GET.get("hasta", ""))
+        filas = _filtrar_por_fecha(filas, desde, hasta)
 
     respuesta = HttpResponse(content_type="text/csv; charset=utf-8")
     respuesta["Content-Disposition"] = (

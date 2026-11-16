@@ -23,9 +23,45 @@
   <div class="dato alerta"><div class="valor">{{ resumen.por_vencer|default:"0" }}</div><div class="etiqueta">Lotes que vencen en 7 días</div></div>
 </section>
 
-{% if error %}
-  <p class="aviso-rol" role="alert">{{ error }}</p>
-{% endif %}
+<section class="tarjeta exportar">
+  <h2>Exportar reportes</h2>
+  <form method="get" action="{% url 'coordinador_exportar' %}">
+    <div class="campo">
+      <label for="reporte">Reporte</label>
+      <select id="reporte" name="reporte">
+        {% for clave, titulo in reportes %}<option value="{{ clave }}">{{ titulo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo" id="grupo-desde">
+      <label for="desde">Desde</label>
+      <input id="desde" name="desde" type="date">
+    </div>
+    <div class="campo" id="grupo-hasta">
+      <label for="hasta">Hasta</label>
+      <input id="hasta" name="hasta" type="date">
+    </div>
+    <button type="submit">Exportar CSV</button>
+  </form>
+  <p class="ayuda">Se descarga un archivo CSV que se abre directo en Excel. Podés filtrar por fechas en Ingresos, Entregas o Todos los movimientos.</p>
+</section>
+
+<script>
+  (function () {
+    const selReporte = document.getElementById('reporte');
+    const grupoDesde = document.getElementById('grupo-desde');
+    const grupoHasta = document.getElementById('grupo-hasta');
+    const conFecha = new Set(['ingresos', 'entregas', 'movimientos']);
+    function actualizarFechas() {
+      const mostrar = conFecha.has(selReporte.value);
+      grupoDesde.style.display = mostrar ? '' : 'none';
+      grupoHasta.style.display = mostrar ? '' : 'none';
+    }
+    if (selReporte) {
+      selReporte.addEventListener('change', actualizarFechas);
+      actualizarFechas();
+    }
+  })();
+</script>
 
 <section class="listados">
   <div class="tarjeta">
