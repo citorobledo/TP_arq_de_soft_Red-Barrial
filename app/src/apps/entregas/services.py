@@ -201,3 +201,29 @@ def eliminar_detalle_entrega(detalle_id: int) -> None:
     if detalle.entrega.estado != Entrega.Estado.ANULADA:
         deposito_services.restituir_stock(detalle.lote_id, detalle.cantidad)
     repositories.eliminar_detalle(detalle)
+
+@transaction.atomic
+def confirmar_recepcion(
+    entrega_id: int, *, usuario_id: int, nombre_referente: str
+) -> Entrega:
+    """El referente del comedor confirma que recibió la entrega.
+
+    Solo el referente del comedor destinatario puede hacerlo. Es idempotente:
+    si ya estaba confirmada no se pisan la fecha ni el nombre (ADR-11).
+    """
+    entrega = repositories.obtener_entrega_por_id(entrega_id, bloquear=True)
+    if entrega.comedor.usuario_id != usuario_id:
+        raise ValidationError("La entrega no corresponde a un comedor de este referente.")
+    if entrega.estado == Entrega.Estado.CONFIRMADA:
+        return entrega
+    if entrega.estado != Entrega.Estado.REGISTRADA:
+        raise ValidationError("Solo se puede recibir una entrega registrada.")
+    nombre = nombre_referente.strip()
+    if not nombre:
+        raise ValidationError({"nombre_referente": "El nombre del referente es obligatorio."})
+
+    entrega.estado = Entrega.Estado.CONFIRMADA
+    entrega.fecha_confirmacion = timezone.now()
+    entrega.nombre_referente = nombre
+    repositories.guardar_entrega(entrega)
+    return repositories.obtener_entrega_por_id(entrega.id)

@@ -24,10 +24,11 @@
     <dd>
       {% url 'deposito' as url_deposito %}
       {% url 'coordinador' as url_coordinador %}
+      {% url 'comedor' as url_comedor %}
       {% for rol in roles %}
       <div class="rol-item">
         <span class="chip-rol">{{ rol }}</span>
-        {% if rol == "voluntario_deposito" and url_deposito %}<a class="boton boton-rol" href="{{ url_deposito }}">Ir al panel de depósito</a>{% elif rol == "coordinador" and url_coordinador %}<a class="boton boton-rol" href="{{ url_coordinador }}">Ir al panel del coordinador</a>{% endif %}
+        {% if rol == "voluntario_deposito" and url_deposito %}<a class="boton boton-rol" href="{{ url_deposito }}">Ir al panel de depósito</a>{% elif rol == "coordinador" and url_coordinador %}<a class="boton boton-rol" href="{{ url_coordinador }}">Ir al panel del coordinador</a>{% elif rol == "referente_comedor" and url_comedor %}<a class="boton boton-rol" href="{{ url_comedor }}">Ir a recepción de entregas</a>{% endif %}
       </div>
       {% empty %}—{% endfor %}
     </dd>
@@ -36,4 +37,4 @@
     <p class="aviso-rol">Tu usuario no tiene ningún rol asignado. Pedile al coordinador que te asigne uno.</p>
   {% endif %}
 </section>
-{% endblock %}
+{% endblock %}

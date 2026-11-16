@@ -10,7 +10,10 @@ from apps.deposito import services as deposito_services
 from apps.entregas import services as entrega_services
 from apps.entregas.models import DetalleEntrega, Entrega
 from apps.productos import services as producto_services
+from apps.comedores.models import Comedor
 
+from . import services
+from .models import Entrega
 
 class EntregasServicesTests(TestCase):
     def setUp(self):
@@ -165,3 +168,57 @@ class EntregasServicesTests(TestCase):
         self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 10)
         with self.assertRaises(DetalleEntrega.DoesNotExist):
             entrega_services.obtener_detalle_entrega(detalle.id)
+
+class ConfirmarRecepcionTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.referente = User.objects.create_user("ana", password="x")
+        self.otro = User.objects.create_user("otro", password="x")
+        self.comedor = Comedor.objects.create(
+            nombre="Los Pibes", codigo="CP-001", direccion="Calle 1", usuario=self.referente
+        )
+        self.entrega = services.crear_entrega(
+            fecha=date.today(), nombre_voluntario="Miriam", comedor_id=self.comedor.id
+        )
+
+    def _confirmar(self, usuario=None, nombre="Ana Pérez"):
+        usuario = usuario or self.referente
+        return services.confirmar_recepcion(
+            self.entrega.id, usuario_id=usuario.id, nombre_referente=nombre
+        )
+
+    def test_confirma_y_registra_fecha_y_referente(self):
+        entrega = self._confirmar()
+        self.assertEqual(entrega.estado, Entrega.Estado.CONFIRMADA)
+        self.assertIsNotNone(entrega.fecha_confirmacion)
+        self.assertEqual(entrega.nombre_referente, "Ana Pérez")
+
+    def test_no_pisa_el_nombre_del_voluntario(self):
+        entrega = self._confirmar()
+        self.assertEqual(entrega.nombre_voluntario, "Miriam")
+
+    def test_es_idempotente(self):
+        primera = self._confirmar(nombre="Ana Pérez")
+        segunda = self._confirmar(nombre="Otro Nombre")
+        self.assertEqual(segunda.fecha_confirmacion, primera.fecha_confirmacion)
+        self.assertEqual(segunda.nombre_referente, "Ana Pérez")
+
+    def test_rechaza_a_un_referente_de_otro_comedor(self):
+        with self.assertRaises(ValidationError):
+            self._confirmar(usuario=self.otro)
+        self.entrega.refresh_from_db()
+        self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)
+        self.assertIsNone(self.entrega.fecha_confirmacion)
+
+    def test_rechaza_una_entrega_anulada(self):
+        services.actualizar_entrega(self.entrega.id, estado=Entrega.Estado.ANULADA)
+        with self.assertRaises(ValidationError):
+            self._confirmar()
+        self.entrega.refresh_from_db()
+        self.assertEqual(self.entrega.estado, Entrega.Estado.ANULADA)
+
+    def test_rechaza_nombre_vacio(self):
+        with self.assertRaises(ValidationError):
+            self._confirmar(nombre="   ")
+        self.entrega.refresh_from_db()
+        self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)   
