@@ -16,14 +16,66 @@ TASA_FALLAS = float(os.getenv("MOCK_FAILURE_RATE", "0.2"))
 app = FastAPI(title="Padrón provincial (simulado)", version="0.1.0")
 
 COMEDORES = {
-    "CP-001": {"nombre": "Comedor Los Pibes", "habilitado": True},
-    "CP-002": {"nombre": "Merendero La Esperanza", "habilitado": True},
-    "CP-003": {"nombre": "Comedor San Cayetano", "habilitado": True},
-    "CP-004": {"nombre": "Olla Popular Barrio Norte", "habilitado": True},
-    "CP-005": {"nombre": "Comedor Manos Unidas", "habilitado": True},
-    "CP-006": {"nombre": "Merendero El Trébol", "habilitado": True},
-    "CP-007": {"nombre": "Comedor Nuevo Amanecer", "habilitado": True},
-    "CP-008": {"nombre": "Comedor Sin Habilitación", "habilitado": False},
+    "CP-001": {
+        "nombre": "Comedor Los Pibes",
+        "direccion": "Av. Siempreviva 742",
+        "usuario_id": None,
+        "habilitado": True,
+    },
+    "CP-002": {
+        "nombre": "Merendero La Esperanza",
+        "direccion": "Calle 9 124",
+        "usuario_id": None,
+        "habilitado": True,
+    },
+    "CP-003": {
+        "nombre": "Comedor San Cayetano",
+        "direccion": "Belgrano 530",
+        "usuario_id": None,
+        "habilitado": True,
+    },
+    "CP-004": {
+        "nombre": "Olla Popular Barrio Norte",
+        "direccion": "Mitre 1850",
+        "usuario_id": None,
+        "habilitado": True,
+    },
+    "CP-005": {
+        "nombre": "Comedor Manos Unidas",
+        "direccion": "San Martín 318",
+        "usuario_id": None,
+        "habilitado": False,
+    },
+    "CP-006": {
+        "nombre": "Merendero El Trébol",
+        "direccion": "Rivadavia 907",
+        "usuario_id": None,
+        "habilitado": True,
+    },
+    "CP-007": {
+        "nombre": "Comedor Nuevo Amanecer",
+        "direccion": "Sarmiento 611",
+        "usuario_id": None,
+        "habilitado": True,
+    },
+    "CP-008": {
+        "nombre": "Comedor Sin Habilitación",
+        "direccion": "Moreno 280",
+        "usuario_id": None,
+        "habilitado": False,
+    },
+    "CP-009": {
+        "nombre": "Merendero La Alegría",
+        "direccion": "Diagonal 123",
+        "usuario_id": None,
+        "habilitado": False,
+    },
+    "CP-010": {
+        "nombre": "Comedor Nuevo Amanecer",
+        "direccion": "Sarmiento 611",
+        "usuario_id": None,
+        "habilitado": True,
+    }
 }
 
 

@@ -151,8 +151,8 @@ def _datos():
             "nombre": f"{c.codigo} - {c.nombre}",
             "direccion": c.direccion,
             "referente": c.usuario_nombre,
-            "estado": "habilitado",
-            "estado_texto": "Habilitado",
+            "estado": "habilitado" if c.habilitado else "no_habilitado",
+            "estado_texto": "Habilitado" if c.habilitado else "No habilitado",
         }
         for c in comedores_dtos
     ]

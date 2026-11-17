@@ -87,7 +87,7 @@ services:
       OIDC_OP_JWKS_ENDPOINT: http://keycloak:8080/realms/red-barrial/protocol/openid-connect/certs
       # Padrón provincial (simulado).
       PADRON_URL: http://padron-mock:8001
-      PADRON_TIMEOUT_SECONDS: "5"
+      PADRON_TIMEOUT_SECONDS: "10"
       PADRON_CACHE_MAX_AGE_HOURS: "168"
     ports:
       - "8000:8000"
