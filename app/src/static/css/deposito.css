@@ -172,8 +172,11 @@ input, select {
 .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .tarjeta form button { margin-top: 16px; width: 100%; }
 
-.listados { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
-.listados > *, .formularios > * { min-width: 0; }
+.tarjeta-ingreso form > .fila { grid-column: 1 / -1; }
+.tarjeta-ingreso .celda-boton { display: flex; align-items: flex-end; }
+.tarjeta-ingreso .celda-boton button { margin-top: 0; }
+.listados.apilados { grid-template-columns: 1fr; gap: 0; }
+.listados.apilados .tarjeta-ingreso { order: -1; margin-bottom: 24px; }
 .tabla-scroll { overflow-x: auto; }
 .tabla-scroll table { min-width: 560px; }
 
@@ -425,13 +428,19 @@ dialog.modal-dialog::backdrop {
 
 /* ---------- Acciones en tabla de lotes ---------- */
 .acciones-tabla {
-  display: flex;
+  display: flex; 
+  align-items: center; 
   gap: 6px;
-  align-items: center;
 }
 .acciones-tabla form {
   margin: 0;
 }
+.acciones-tabla button { 
+  margin: 0; 
+  width: auto; }
+td { 
+  vertical-align: middle;
+ }
 button.boton-tabla {
   padding: 4px 10px;
   font-size: .8rem;
