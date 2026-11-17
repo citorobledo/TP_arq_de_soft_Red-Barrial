@@ -106,7 +106,8 @@ OIDC_STORE_ID_TOKEN = True  # necesario para cerrar también la sesión en Keycl
 OIDC_OP_LOGOUT_URL_METHOD = "apps.seguridad.logout.keycloak_logout_url"
 
 LOGIN_URL = "oidc_authentication_init"
-LOGIN_REDIRECT_URL = "/panel/"
+# LOGIN_REDIRECT_URL = "/panel/"
+LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 LOGGING = {

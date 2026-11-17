@@ -26,7 +26,7 @@ COMEDORES = {
         "nombre": "Merendero La Esperanza",
         "direccion": "Calle 9 124",
         "usuario_id": None,
-        "habilitado": True,
+        "habilitado": False,
     },
     "CP-003": {
         "nombre": "Comedor San Cayetano",
