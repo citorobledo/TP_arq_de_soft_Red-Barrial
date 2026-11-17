@@ -5,8 +5,8 @@ barrial de comedores.
 
 > **Estado del proyecto:** la base web y la autenticación están implementadas,
 > pero todavía no están desarrolladas las funciones de negocio para registrar
-> donaciones, lotes o entregas. El padrón disponible es un servicio simulado y
-> aún no está integrado con la aplicación.
+> donaciones, lotes o entregas. El padrón disponible es un servicio simulado;
+> sus comedores se sincronizan con la aplicación al iniciar el contenedor.
 
 ## Funcionalidad disponible
 
@@ -17,6 +17,8 @@ barrial de comedores.
 - Sincronización de los roles de Keycloak con grupos de Django. Los roles
   configurados son `voluntario_deposito`, `referente_comedor` y `coordinador`.
 - API simulada del padrón provincial, con demoras y errores configurables.
+- Sincronización de comedores del padrón a SQLite al iniciar el contenedor de
+  Django, actualizando por código y sin borrar registros locales ausentes del mock.
 - Persistencia preparada con SQLite y volumen Docker; todavía no hay modelos ni
   operaciones de negocio para movimientos de alimentos.
 
@@ -32,7 +34,7 @@ pruebas automatizadas.
 | Aplicación web | Django 5.1+, Python 3.12, Gunicorn y plantillas renderizadas en el servidor. |
 | Identidad | Keycloak 26 por OIDC; un inicializador corrige los permisos del volumen de datos antes del arranque y un proxy Nginx bloquea la consola administrativa en el puerto de login. |
 | Persistencia | SQLite en modo WAL para Django; H2 en archivo para Keycloak. Ambos datos viven en volúmenes Docker. |
-| Padrón simulado | FastAPI y Uvicorn; expone endpoints REST con demoras y fallas configurables. |
+| Padrón simulado | FastAPI y Uvicorn; expone endpoints REST con demoras y fallas configurables. Django sincroniza sus comedores al arrancar. |
 | Orquestación | Docker Compose inicia la aplicación, Keycloak, su proxy y el mock. |
 
 ## Requisitos
@@ -65,8 +67,11 @@ docker compose up -d --build
 ```
 
 Compose inicializa automáticamente los permisos del volumen de Keycloak antes
-de iniciar el servicio. La aplicación ejecuta las migraciones y recopila los
-archivos estáticos al iniciar. Para detener los servicios:
+de iniciar el servicio. La aplicación ejecuta las migraciones, sincroniza los
+comedores desde `http://padron-mock:8001/comedores` y recopila los archivos
+estáticos al iniciar. La sincronización inserta o actualiza por código; no
+elimina registros locales que ya no aparezcan en el padrón. Para detener los
+servicios:
 
 ```powershell
 docker compose down
@@ -106,9 +111,10 @@ pantallas de negocio con permisos por rol.
 Para comprobar el flujo principal, abrir `/`, iniciar sesión desde el botón
 **Ingresar con Keycloak** y verificar que se vuelve al panel en `/panel/`.
 Asignar previamente un rol al usuario desde la consola de administración para
-verlo reflejado en el panel. El padrón es un servicio independiente: sus
-endpoints permiten probar el mock, pero todavía no están conectados a la
-aplicación.
+verlo reflejado en el panel. El `usuario_id` numérico del mock se asocia al ID
+del usuario local si existe; si todavía no está creado, el comedor se importa
+sin referente y se puede vincular en una sincronización posterior ejecutando
+`docker compose exec app python manage.py sincronizar_comedores_padron`.
 
 ## Uso desde otras computadoras de la red
 
@@ -150,9 +156,13 @@ El servicio `padron-mock` ofrece:
 - `GET /comedores`: lista de comedores de ejemplo.
 - `GET /comedores/{codigo}`: consulta un comedor por código.
 
-Las consultas al padrón pueden demorarse y fallar con HTTP 503 según las
-variables `MOCK_LATENCY_*` y `MOCK_FAILURE_RATE`. Los códigos y datos son
-estáticos y ficticios. La aplicación Django aún no consume estos endpoints.
+Los registros incluyen `codigo`, `nombre`, `direccion`, `usuario_id` y
+`habilitado`. La sincronización guarda y actualiza estos datos en cada inicio.
+El `usuario_id` de ejemplo es `3` y debe coincidir con el ID de un usuario local
+para asignar el referente. Las consultas al padrón pueden demorarse y fallar
+con HTTP 503 según las variables
+`MOCK_LATENCY_*` y `MOCK_FAILURE_RATE`; la aplicación reintenta la consulta al
+iniciar.
 
 ## Respaldo y restauración
 

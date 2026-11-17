@@ -1,4 +1,6 @@
+import json
 from datetime import date
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -80,3 +82,74 @@ class ComedoresServicesTests(TestCase):
         )
         with self.assertRaises(ProtectedError):
             comedor_services.eliminar_comedor(comedor.id)
+
+    @patch("apps.comedores.services.urlopen")
+    def test_sincronizar_padron_inserta_y_actualiza_usuario_por_id(
+        self, mock_urlopen
+    ):
+        response = mock_urlopen.return_value.__enter__.return_value
+        response.read.return_value = json.dumps(
+            [
+                {
+                    "codigo": "CP-101",
+                    "nombre": "Comedor del padrón",
+                    "direccion": "Calle 123",
+                    "usuario_id": self.user1.id,
+                    "habilitado": True,
+                },
+                {
+                    "codigo": "CP-102",
+                    "nombre": "Comedor sin usuario local",
+                    "direccion": "Calle 456",
+                    "usuario_id": 999,
+                    "habilitado": False,
+                },
+            ]
+        ).encode()
+
+        resultado = comedor_services.sincronizar_comedores_padron()
+
+        self.assertEqual(resultado, {"insertados": 2, "actualizados": 0})
+        comedor_asignado = Comedor.objects.get(codigo="CP-101")
+        self.assertEqual(comedor_asignado.usuario, self.user1)
+        self.assertEqual(comedor_asignado.direccion, "Calle 123")
+        self.assertTrue(comedor_asignado.habilitado)
+
+        comedor_sin_referente = Comedor.objects.get(codigo="CP-102")
+        self.assertIsNone(comedor_sin_referente.usuario_id)
+        self.assertEqual(comedor_sin_referente.direccion, "Calle 456")
+        self.assertFalse(comedor_sin_referente.habilitado)
+        dto = comedor_services.obtener_comedor(comedor_sin_referente.id)
+        self.assertEqual(dto.usuario_nombre, "")
+        self.assertFalse(dto.habilitado)
+
+        response.read.return_value = json.dumps(
+            [
+                {
+                    "codigo": "CP-101",
+                    "nombre": "Comedor actualizado",
+                    "direccion": "Calle 789",
+                    "usuario_id": self.user2.id,
+                    "habilitado": False,
+                },
+                {
+                    "codigo": "CP-102",
+                    "nombre": "Comedor sin usuario local",
+                    "direccion": "Calle 456",
+                    "usuario_id": 999,
+                    "habilitado": True,
+                },
+            ]
+        ).encode()
+
+        resultado = comedor_services.sincronizar_comedores_padron()
+
+        self.assertEqual(resultado, {"insertados": 0, "actualizados": 2})
+        comedor_asignado.refresh_from_db()
+        self.assertEqual(comedor_asignado.nombre, "Comedor actualizado")
+        self.assertEqual(comedor_asignado.direccion, "Calle 789")
+        self.assertEqual(comedor_asignado.usuario, self.user2)
+        self.assertFalse(comedor_asignado.habilitado)
+        comedor_sin_referente.refresh_from_db()
+        self.assertTrue(comedor_sin_referente.habilitado)
+        self.assertEqual(Comedor.objects.filter(codigo__startswith="CP-10").count(), 2)
