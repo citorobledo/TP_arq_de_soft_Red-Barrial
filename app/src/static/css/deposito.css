@@ -427,20 +427,20 @@ dialog.modal-dialog::backdrop {
 }
 
 /* ---------- Acciones en tabla de lotes ---------- */
-.acciones-tabla {
+.tarjeta .acciones-tabla { 
   display: flex; 
   align-items: center; 
-  gap: 6px;
+  gap: 6px; 
 }
-.acciones-tabla form {
-  margin: 0;
-}
-.acciones-tabla button { 
+.tarjeta .acciones-tabla form { 
   margin: 0; 
-  width: auto; }
-td { 
-  vertical-align: middle;
- }
+}
+.tarjeta .acciones-tabla form button,
+.tarjeta .acciones-tabla button { 
+  margin-top: 0; 
+  width: auto; 
+}
+
 button.boton-tabla {
   padding: 4px 10px;
   font-size: .8rem;
