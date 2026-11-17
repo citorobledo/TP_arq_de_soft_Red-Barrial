@@ -28,7 +28,8 @@ class ComedorOut(Schema):
     nombre: str
     codigo: str
     direccion: str
-    usuario_id: int
+    usuario_id: Optional[int]
+    habilitado: bool
 
 
 @router.get("/", response=list[ComedorOut], summary="Listar comedores")

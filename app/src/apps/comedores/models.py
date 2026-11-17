@@ -7,11 +7,14 @@ class Comedor(models.Model):
     nombre = models.CharField(max_length=150, db_column="Nombre")
     codigo = models.CharField(max_length=50, unique=True, db_column="Codigo")
     direccion = models.CharField(max_length=255, db_column="Direccion")
+    habilitado = models.BooleanField(default=True, db_column="Habilitado")
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="comedores",
         db_column="ID_Usuario",
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -27,5 +30,6 @@ class Comedor(models.Model):
             "nombre": self.nombre,
             "codigo": self.codigo,
             "direccion": self.direccion,
+            "habilitado": self.habilitado,
             "id_usuario": self.usuario_id,
         }

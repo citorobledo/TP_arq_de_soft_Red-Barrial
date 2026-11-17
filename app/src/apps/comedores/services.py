@@ -1,12 +1,21 @@
 """Casos de uso y reglas de negocio para Comedor (independientes de HTTP y del ORM)."""
 
+import json
+import logging
+import time
 from typing import Optional
+from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
 
+from django.conf import settings
 from django.db import transaction
 
 from . import repositories
 from .dtos import ComedorDTO
 from .models import Comedor
+
+logger = logging.getLogger(__name__)
+PADRON_MAX_ATTEMPTS = 5
 
 __all__ = [
     "ComedorDTO",
@@ -16,18 +25,107 @@ __all__ = [
     "crear_comedor",
     "actualizar_comedor",
     "eliminar_comedor",
+    "sincronizar_comedores_padron",
 ]
 
 
 def _to_dto(comedor: Comedor) -> ComedorDTO:
+    usuario_nombre = ""
+    if comedor.usuario_id is not None:
+        usuario_nombre = comedor.usuario.get_full_name() or comedor.usuario.username
     return ComedorDTO(
         id=comedor.id,
         nombre=comedor.nombre,
         codigo=comedor.codigo,
         direccion=comedor.direccion,
         usuario_id=comedor.usuario_id,
-        usuario_nombre=comedor.usuario.get_full_name() or comedor.usuario.username,
+        habilitado=comedor.habilitado,
+        usuario_nombre=usuario_nombre,
     )
+
+
+def _consultar_padron() -> list[dict]:
+    url = f"{settings.PADRON_URL.rstrip('/')}/comedores"
+    ultimo_error = None
+
+    for intento in range(1, PADRON_MAX_ATTEMPTS + 1):
+        try:
+            with urlopen(url, timeout=settings.PADRON_TIMEOUT_SECONDS) as respuesta:
+                comedores = json.loads(respuesta.read().decode("utf-8"))
+            if not isinstance(comedores, list):
+                raise ValueError("El padrón no devolvió una lista de comedores.")
+            return comedores
+        except HTTPError as error:
+            if error.code < 500:
+                raise RuntimeError(
+                    f"El padrón respondió HTTP {error.code} al listar comedores."
+                ) from error
+            ultimo_error = error
+        except (URLError, TimeoutError) as error:
+            ultimo_error = error
+
+        if intento < PADRON_MAX_ATTEMPTS:
+            logger.warning(
+                "No se pudo consultar el padrón (intento %d/%d): %s",
+                intento,
+                PADRON_MAX_ATTEMPTS,
+                ultimo_error,
+            )
+            time.sleep(min(intento, 3))
+
+    raise RuntimeError(
+        f"No se pudo consultar el padrón después de {PADRON_MAX_ATTEMPTS} intentos."
+    ) from ultimo_error
+
+
+def _normalizar_comedor_padron(datos: dict) -> dict:
+    if not isinstance(datos, dict):
+        raise ValueError("Cada comedor del padrón debe ser un objeto JSON.")
+
+    codigo = datos.get("codigo")
+    if not isinstance(codigo, str) or not codigo.strip():
+        raise ValueError("El comedor del padrón debe incluir codigo no vacío.")
+    habilitado = datos.get("habilitado")
+    if not isinstance(habilitado, bool):
+        raise ValueError("El comedor del padrón debe incluir habilitado como booleano.")
+    return {"codigo": codigo.strip(), "habilitado": habilitado}
+
+
+def sincronizar_comedores_padron() -> dict[str, int]:
+    """Actualiza solo habilitado en comedores locales con código coincidente."""
+    datos_padron = _consultar_padron()
+    comedores = [_normalizar_comedor_padron(datos) for datos in datos_padron]
+
+    codigos = [comedor["codigo"] for comedor in comedores]
+    if len(codigos) != len(set(codigos)):
+        raise ValueError("El padrón devolvió códigos de comedor duplicados.")
+
+    sin_cambios = 0
+    actualizados = 0
+    habilitado_por_codigo = {
+        comedor["codigo"]: comedor["habilitado"] for comedor in comedores
+    }
+    with transaction.atomic():
+        comedores_locales = list(
+            Comedor.objects.filter(codigo__in=habilitado_por_codigo)
+        )
+        codigos_locales = {comedor.codigo for comedor in comedores_locales}
+        sin_coincidencia = len(set(habilitado_por_codigo) - codigos_locales)
+
+        for comedor in comedores_locales:
+            habilitado = habilitado_por_codigo[comedor.codigo]
+            if comedor.habilitado != habilitado:
+                comedor.habilitado = habilitado
+                comedor.save(update_fields=["habilitado"])
+                actualizados += 1
+            else:
+                sin_cambios += 1
+
+    return {
+        "actualizados": actualizados,
+        "sin_cambios": sin_cambios,
+        "sin_coincidencia": sin_coincidencia,
+    }
 
 
 # --- GET (Lectura) ---
