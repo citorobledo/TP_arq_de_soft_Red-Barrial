@@ -177,8 +177,26 @@ input, select {
 .tarjeta-ingreso .celda-boton button { margin-top: 0; }
 .listados.apilados { grid-template-columns: 1fr; gap: 0; }
 .listados.apilados .tarjeta-ingreso { order: -1; margin-bottom: 24px; }
-.tabla-scroll { overflow-x: auto; }
-.tabla-scroll table { min-width: 560px; }
+/* Alinear verticalmente el contenido de todas las celdas */
+.tabla-scroll table td {
+    vertical-align: middle;
+}
+.tabla-scroll table td:last-child {
+    text-align: center;
+    vertical-align: middle;
+}
+.tabla-scroll table td:last-child form {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.tabla-scroll table td:last-child button {
+    margin: 0;
+}
+/* .tabla-scroll { overflow-x: auto; }
+.tabla-scroll table { min-width: 560px; } */
 
 table { width: 100%; border-collapse: collapse; font-size: .93rem; }
 th {
