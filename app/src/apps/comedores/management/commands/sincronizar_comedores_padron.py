@@ -14,7 +14,8 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 "Sincronización completada: "
-                f"{resultado['insertados']} insertados, "
-                f"{resultado['actualizados']} actualizados."
+                f"{resultado['actualizados']} estados actualizados, "
+                f"{resultado['sin_cambios']} sin cambios, "
+                f"{resultado['sin_coincidencia']} sin coincidencia local."
             )
         )

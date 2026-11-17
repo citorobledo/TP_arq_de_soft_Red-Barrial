@@ -8,7 +8,6 @@ from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from . import repositories
@@ -83,30 +82,17 @@ def _normalizar_comedor_padron(datos: dict) -> dict:
     if not isinstance(datos, dict):
         raise ValueError("Cada comedor del padrón debe ser un objeto JSON.")
 
-    normalizado = {}
-    for campo in ("codigo", "nombre", "direccion"):
-        valor = datos.get(campo)
-        if not isinstance(valor, str) or not valor.strip():
-            raise ValueError(f"El comedor del padrón debe incluir {campo} no vacío.")
-        normalizado[campo] = valor.strip()
-
-    if "usuario_id" not in datos:
-        raise ValueError("El comedor del padrón debe incluir usuario_id.")
-    usuario_id = datos["usuario_id"]
-    if usuario_id is not None and (
-        type(usuario_id) is not int or usuario_id < 1
-    ):
-        raise ValueError("usuario_id debe ser un entero positivo o null.")
-    normalizado["usuario_id"] = usuario_id
+    codigo = datos.get("codigo")
+    if not isinstance(codigo, str) or not codigo.strip():
+        raise ValueError("El comedor del padrón debe incluir codigo no vacío.")
     habilitado = datos.get("habilitado")
     if not isinstance(habilitado, bool):
         raise ValueError("El comedor del padrón debe incluir habilitado como booleano.")
-    normalizado["habilitado"] = habilitado
-    return normalizado
+    return {"codigo": codigo.strip(), "habilitado": habilitado}
 
 
 def sincronizar_comedores_padron() -> dict[str, int]:
-    """Inserta o actualiza los comedores publicados por el padrón provincial."""
+    """Actualiza solo habilitado en comedores locales con código coincidente."""
     datos_padron = _consultar_padron()
     comedores = [_normalizar_comedor_padron(datos) for datos in datos_padron]
 
@@ -114,42 +100,32 @@ def sincronizar_comedores_padron() -> dict[str, int]:
     if len(codigos) != len(set(codigos)):
         raise ValueError("El padrón devolvió códigos de comedor duplicados.")
 
-    User = get_user_model()
-    usuario_ids = {
-        comedor["usuario_id"]
-        for comedor in comedores
-        if comedor["usuario_id"] is not None
-    }
-    usuarios_existentes = set(
-        User.objects.filter(pk__in=usuario_ids).values_list("pk", flat=True)
-    )
-    insertados = 0
+    sin_cambios = 0
     actualizados = 0
+    habilitado_por_codigo = {
+        comedor["codigo"]: comedor["habilitado"] for comedor in comedores
+    }
     with transaction.atomic():
-        for datos in comedores:
-            usuario_id = datos["usuario_id"]
-            if usuario_id is not None and usuario_id not in usuarios_existentes:
-                logger.warning(
-                    "El usuario_id %s del comedor %s no existe; se importará sin referente.",
-                    usuario_id,
-                    datos["codigo"],
-                )
-                usuario_id = None
-            _, creado = Comedor.objects.update_or_create(
-                codigo=datos["codigo"],
-                defaults={
-                    "nombre": datos["nombre"],
-                    "direccion": datos["direccion"],
-                    "habilitado": datos["habilitado"],
-                    "usuario_id": usuario_id,
-                },
-            )
-            if creado:
-                insertados += 1
-            else:
-                actualizados += 1
+        comedores_locales = list(
+            Comedor.objects.filter(codigo__in=habilitado_por_codigo)
+        )
+        codigos_locales = {comedor.codigo for comedor in comedores_locales}
+        sin_coincidencia = len(set(habilitado_por_codigo) - codigos_locales)
 
-    return {"insertados": insertados, "actualizados": actualizados}
+        for comedor in comedores_locales:
+            habilitado = habilitado_por_codigo[comedor.codigo]
+            if comedor.habilitado != habilitado:
+                comedor.habilitado = habilitado
+                comedor.save(update_fields=["habilitado"])
+                actualizados += 1
+            else:
+                sin_cambios += 1
+
+    return {
+        "actualizados": actualizados,
+        "sin_cambios": sin_cambios,
+        "sin_coincidencia": sin_coincidencia,
+    }
 
 
 # --- GET (Lectura) ---

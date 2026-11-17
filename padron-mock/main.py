@@ -19,51 +19,63 @@ COMEDORES = {
     "CP-001": {
         "nombre": "Comedor Los Pibes",
         "direccion": "Av. Siempreviva 742",
-        "usuario_id": 2,
+        "usuario_id": None,
         "habilitado": True,
     },
     "CP-002": {
         "nombre": "Merendero La Esperanza",
         "direccion": "Calle 9 124",
-        "usuario_id": 2,
+        "usuario_id": None,
         "habilitado": True,
     },
     "CP-003": {
         "nombre": "Comedor San Cayetano",
         "direccion": "Belgrano 530",
-        "usuario_id": 2,
+        "usuario_id": None,
         "habilitado": True,
     },
     "CP-004": {
         "nombre": "Olla Popular Barrio Norte",
         "direccion": "Mitre 1850",
-        "usuario_id": 2,
+        "usuario_id": None,
         "habilitado": True,
     },
     "CP-005": {
         "nombre": "Comedor Manos Unidas",
         "direccion": "San Martín 318",
-        "usuario_id": 2,
-        "habilitado": True,
+        "usuario_id": None,
+        "habilitado": False,
     },
     "CP-006": {
         "nombre": "Merendero El Trébol",
         "direccion": "Rivadavia 907",
-        "usuario_id": 2,
+        "usuario_id": None,
         "habilitado": True,
     },
     "CP-007": {
         "nombre": "Comedor Nuevo Amanecer",
         "direccion": "Sarmiento 611",
-        "usuario_id": 3,
+        "usuario_id": None,
         "habilitado": True,
     },
     "CP-008": {
         "nombre": "Comedor Sin Habilitación",
         "direccion": "Moreno 280",
-        "usuario_id": 2,
+        "usuario_id": None,
         "habilitado": False,
     },
+    "CP-009": {
+        "nombre": "Merendero La Alegría",
+        "direccion": "Diagonal 123",
+        "usuario_id": None,
+        "habilitado": False,
+    },
+    "CP-010": {
+        "nombre": "Comedor Nuevo Amanecer",
+        "direccion": "Sarmiento 611",
+        "usuario_id": None,
+        "habilitado": True,
+    }
 }
 
 

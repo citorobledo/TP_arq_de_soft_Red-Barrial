@@ -18,7 +18,7 @@ barrial de comedores.
   configurados son `voluntario_deposito`, `referente_comedor` y `coordinador`.
 - API simulada del padrón provincial, con demoras y errores configurables.
 - Sincronización de comedores del padrón a SQLite al iniciar el contenedor de
-  Django, actualizando por código y sin borrar registros locales ausentes del mock.
+  Django: actualiza solo el estado de los registros locales con código coincidente.
 - Persistencia preparada con SQLite y volumen Docker; todavía no hay modelos ni
   operaciones de negocio para movimientos de alimentos.
 
@@ -67,11 +67,10 @@ docker compose up -d --build
 ```
 
 Compose inicializa automáticamente los permisos del volumen de Keycloak antes
-de iniciar el servicio. La aplicación ejecuta las migraciones, sincroniza los
-comedores desde `http://padron-mock:8001/comedores` y recopila los archivos
-estáticos al iniciar. La sincronización inserta o actualiza por código; no
-elimina registros locales que ya no aparezcan en el padrón. Para detener los
-servicios:
+de iniciar el servicio. La aplicación ejecuta las migraciones, consulta
+`http://padron-mock:8001/comedores` y actualiza únicamente `habilitado` en los
+comedores locales cuyo `codigo` coincide con el padrón. No crea comedores ni
+cambia sus demás datos. Para detener los servicios:
 
 ```powershell
 docker compose down
@@ -111,10 +110,8 @@ pantallas de negocio con permisos por rol.
 Para comprobar el flujo principal, abrir `/`, iniciar sesión desde el botón
 **Ingresar con Keycloak** y verificar que se vuelve al panel en `/panel/`.
 Asignar previamente un rol al usuario desde la consola de administración para
-verlo reflejado en el panel. El `usuario_id` numérico del mock se asocia al ID
-del usuario local si existe; si todavía no está creado, el comedor se importa
-sin referente y se puede vincular en una sincronización posterior ejecutando
-`docker compose exec app python manage.py sincronizar_comedores_padron`.
+verlo reflejado en el panel. La sincronización del padrón no modifica el
+`usuario_id` ni los demás datos locales del comedor.
 
 ## Uso desde otras computadoras de la red
 
@@ -157,9 +154,10 @@ El servicio `padron-mock` ofrece:
 - `GET /comedores/{codigo}`: consulta un comedor por código.
 
 Los registros incluyen `codigo`, `nombre`, `direccion`, `usuario_id` y
-`habilitado`. La sincronización guarda y actualiza estos datos en cada inicio.
-El `usuario_id` de ejemplo es `3` y debe coincidir con el ID de un usuario local
-para asignar el referente. Las consultas al padrón pueden demorarse y fallar
+`habilitado`. Al iniciar, Django solo consume `codigo` y `habilitado` para
+actualizar el estado de los comedores locales que encuentre por código; no
+crea comedores ni modifica `nombre`, `direccion` o `usuario_id`. Los códigos
+sin coincidencia se ignoran. Las consultas al padrón pueden demorarse y fallar
 con HTTP 503 según las variables
 `MOCK_LATENCY_*` y `MOCK_FAILURE_RATE`; la aplicación reintenta la consulta al
 iniciar.
