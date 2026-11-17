@@ -32,7 +32,56 @@
   <p class="aviso-rol" role="alert">{{ error }}</p>
 {% endif %}
 
-<section class="listados">
+<section class="listados apilados">
+    <div class="tarjeta tarjeta-ingreso">
+    <h2>Registrar ingreso de lote</h2>
+    <form method="post" action="{% url 'deposito' %}">
+      {% csrf_token %}
+      <label for="producto_id">Alimento (Producto)</label>
+      <div class="grupo-selector">
+        <select id="producto_id" name="producto_id" required>
+          <option value="">Elegí un producto…</option>
+          {% for p in productos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}
+        </select>
+        <button type="button" class="boton-mas" id="abrir-modal-producto" title="Agregar nuevo producto">+</button>
+      </div>
+
+      <label for="numero_lote">Número de lote</label>
+      <input id="numero_lote" name="numero_lote" type="text" placeholder="Ej: L-0142" required>
+
+      <div class="fila">
+        <div>
+          <label for="cantidad_ing">Cantidad</label>
+          <input id="cantidad_ing" name="cantidad" type="number" min="1" step="1" required>
+        </div>
+        <div>
+          <label for="fecha_ingreso">Fecha de ingreso</label>
+          <input id="fecha_ingreso" name="fecha_ingreso" type="date" value="{{ hoy }}" required>
+        </div>
+      </div>
+
+      <div class="fila">
+        <div>
+          <label for="vencimiento">Vencimiento</label>
+          <input id="vencimiento" name="vencimiento" type="date" required>
+        </div>
+        <div>
+          <label for="nombre_donante">Donante</label>
+          <input id="nombre_donante" name="nombre_donante" type="text" placeholder="Empresa o particular" required>
+        </div>
+      </div>
+
+      <div class="fila">
+        <div>
+          <label for="nombre_voluntario">Voluntario</label>
+          <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" required>
+        </div>
+        <div class="celda-boton">
+          <button type="submit">Guardar lote</button>
+        </div>
+      </div>
+    </form>
+  </div>
   <div class="tarjeta">
     <h2>Lotes en depósito</h2>
     <div class="tabla-scroll">
@@ -90,46 +139,6 @@
         </tbody>
       </table>
     </div>
-  </div>
-
-  <div class="tarjeta">
-    <h2>Registrar ingreso de lote</h2>
-    <form method="post" action="{% url 'deposito' %}">
-      {% csrf_token %}
-      <label for="producto_id">Alimento (Producto)</label>
-      <div class="grupo-selector">
-        <select id="producto_id" name="producto_id" required>
-          <option value="">Elegí un producto…</option>
-          {% for p in productos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}
-        </select>
-        <button type="button" class="boton-mas" id="abrir-modal-producto" title="Agregar nuevo producto">+</button>
-      </div>
-
-      <label for="numero_lote">Número de lote</label>
-      <input id="numero_lote" name="numero_lote" type="text" placeholder="Ej: L-0142" required>
-
-      <div class="fila">
-        <div>
-          <label for="cantidad_ing">Cantidad</label>
-          <input id="cantidad_ing" name="cantidad" type="number" min="1" step="1" required>
-        </div>
-        <div>
-          <label for="fecha_ingreso">Fecha de ingreso</label>
-          <input id="fecha_ingreso" name="fecha_ingreso" type="date" value="{{ hoy }}" required>
-        </div>
-      </div>
-
-      <label for="vencimiento">Vencimiento</label>
-      <input id="vencimiento" name="vencimiento" type="date" required>
-
-      <label for="nombre_donante">Donante</label>
-      <input id="nombre_donante" name="nombre_donante" type="text" placeholder="Empresa o particular" required>
-
-      <label for="nombre_voluntario">Voluntario</label>
-      <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" required>
-
-      <button type="submit">Guardar lote</button>
-    </form>
   </div>
 </section>
 
