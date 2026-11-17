@@ -27,7 +27,11 @@ def listar_entregas(
 def obtener_entrega_por_id(entrega_id: int, *, bloquear: bool = False) -> Entrega:
     """Obtiene una entrega por su ID o lanza Entrega.DoesNotExist."""
     if bloquear:
-        return Entrega.objects.select_for_update().get(pk=entrega_id)
+        return (
+            Entrega.objects.select_for_update()
+            .select_related("comedor")
+            .get(pk=entrega_id)
+        )
     return (
         Entrega.objects.select_related("comedor")
         .prefetch_related("detalles__lote__producto")

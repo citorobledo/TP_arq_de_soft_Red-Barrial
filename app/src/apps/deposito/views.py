@@ -1,6 +1,6 @@
 """Vista HTML del módulo Depósito (registro y listado de lotes)."""
 
-from datetime import date, timedelta
+from datetime import date
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import ProtectedError
@@ -98,19 +98,15 @@ def deposito(request):
                 error = "Verificá los datos ingresados (producto, cantidad y fecha de vencimiento)."
 
     hoy = date.today()
-    limite_vencimiento = hoy + timedelta(days=7)
     lotes = deposito_services.listar_lotes()
+    lotes_por_vencer = deposito_services.listar_lotes_por_vencer(hoy=hoy)
 
     contexto = {
         "resumen": {
             "stock_kg": sum(l.stock for l in lotes),
             "lotes_con_stock": sum(1 for l in lotes if l.stock > 0),
             "lotes_totales": len(lotes),
-            "por_vencer": sum(
-                1
-                for l in lotes
-                if l.stock > 0 and hoy <= l.fecha_vencimiento <= limite_vencimiento
-            ),
+            "por_vencer": len(lotes_por_vencer),
         },
         "lotes": lotes,
         "productos": deposito_services.listar_productos(),

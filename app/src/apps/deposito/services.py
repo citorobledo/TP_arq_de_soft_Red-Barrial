@@ -1,6 +1,6 @@
 """Casos de uso y reglas de negocio para Producto y Lote (independientes de HTTP y del ORM)."""
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 from django.core.exceptions import ValidationError
@@ -19,6 +19,7 @@ __all__ = [
     "actualizar_producto",
     "eliminar_producto",
     "listar_lotes",
+    "listar_lotes_por_vencer",
     "obtener_lote",
     "crear_lote",
     "actualizar_lote",
@@ -98,6 +99,20 @@ def listar_lotes(
         for lote in repositories.listar(
             solo_con_stock=solo_con_stock, producto_id=producto_id
         )
+    ]
+
+
+def listar_lotes_por_vencer(
+    *,
+    dias: int = 7,
+    hoy: Optional[date] = None,
+) -> list[LoteDTO]:
+    """Lista lotes con stock disponible que vencen dentro de los próximos `dias` días."""
+    fecha_base = hoy if hoy is not None else date.today()
+    limite = fecha_base + timedelta(days=dias)
+    return [
+        _to_dto(lote)
+        for lote in repositories.listar_por_vencer(fecha_base, limite)
     ]
 
 

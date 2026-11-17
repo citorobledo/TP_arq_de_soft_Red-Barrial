@@ -13,12 +13,6 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "nombre": self.nombre,
-        }
-
 
 class Lote(models.Model):
     id = models.BigAutoField(primary_key=True, db_column="ID")
@@ -53,16 +47,3 @@ class Lote(models.Model):
 
     def __str__(self):
         return f"{self.numero_lote} ({self.producto.nombre})"
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "numero_lote": self.numero_lote,
-            "fecha_ingreso": self.fecha_ingreso.isoformat(),
-            "fecha_vencimiento": self.fecha_vencimiento.isoformat(),
-            "stock": self.stock,
-            "nombre_producto": self.producto.nombre,
-            "nombre_voluntario": self.nombre_voluntario,
-            "nombre_donante": self.nombre_donante,
-            "id_producto": self.producto_id,
-        }

@@ -6,7 +6,6 @@ from typing import Optional
 from ninja import Router, Schema
 
 from . import services
-from .models import Entrega
 
 router = Router()
 
@@ -39,7 +38,7 @@ class EntregaIn(Schema):
     fecha: date
     nombre_voluntario: str
     comedor_id: int
-    estado: str = Entrega.Estado.REGISTRADA
+    estado: str = services.EstadoEntrega.REGISTRADA
     detalles: Optional[list[DetalleEntregaItemIn]] = None
 
 
