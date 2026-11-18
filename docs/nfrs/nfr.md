@@ -6,7 +6,7 @@ Dominio 1 · Banco de alimentos · Escenario 1A · Red barrial. NFR estrella: **
 |---|---|---|---|
 | NFR-01 | Simplicidad de operación (estrella) | Un voluntario con conocimientos básicos despliega o reinicia el sistema con un único comando. | Muy alta |
 | NFR-02 | Bajo costo | Costo de infraestructura ≤ USD 5–10/mes (o $0 en la PC donada); sin licencias; todo el stack open source. | Muy alta |
-| NFR-03 | Trazabilidad y auditabilidad | Ante un reclamo, el coordinador obtiene el historial completo de un lote (ingreso, entregas, comedor, fecha, usuario). Ningún movimiento se borra ni se modifica. | Muy alta |
+| NFR-03 | Trazabilidad y auditabilidad | Ante un reclamo, el coordinador obtiene el historial completo de un lote (ingreso, entregas, comedor, fecha, usuario). Ninguna entrega se borra ni se modifica. | Muy alta |
 | NFR-04 | Mantenibilidad / modificabilidad | Un solo lenguaje y pocas dependencias. Las reglas de negocio (stock, vencimientos) están aisladas y cubiertas por tests. | Muy alta |
 | NFR-05 | Tolerancia a fallos del padrón | Si el padrón no responde en 5 s, el sistema no se bloquea. Aplica una política definida (ver ADR-04) y deja constancia de la acción. | Alta |
 | NFR-06 | Recuperabilidad | RPO ≤ 2 días (se pierde como máximo dos días de datos) y RTO ≤ 4 h. | Alta |
