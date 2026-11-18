@@ -29,7 +29,16 @@
     </nav>
   </header>
 
-  <main>{% block contenido %}{% endblock %}</main>
+  <main>
+    {% if messages %}
+      <div class="mensajes" role="status" aria-live="polite">
+        {% for m in messages %}
+          <div class="mensaje-flash {{ m.tags }}">{{ m }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block contenido %}{% endblock %}
+  </main>
 
   <footer>
     <div><strong>Arquitectura de Software</strong> · Universidad Nacional de Hurlingham</div>

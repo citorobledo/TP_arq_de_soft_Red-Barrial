@@ -5,11 +5,17 @@ from typing import Optional
 from .models import Comedor
 
 
-def listar(*, usuario_id: Optional[int] = None):
+def listar(
+    *,
+    usuario_id: Optional[int] = None,
+    habilitado: Optional[bool] = None,
+):
     """Lista comedores ordenados por nombre, precargando el usuario referente."""
     qs = Comedor.objects.select_related("usuario").all()
     if usuario_id is not None:
         qs = qs.filter(usuario_id=usuario_id)
+    if habilitado is not None:
+        qs = qs.filter(habilitado=habilitado)
     return qs
 
 

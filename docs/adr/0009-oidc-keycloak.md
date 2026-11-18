@@ -19,7 +19,7 @@ Keycloak como proveedor OIDC. La aplicación valida el ID token con las claves p
 ## Consecuencias
 - Consumo de memoria mayor que el resto del sistema junto (heap limitado a 768 MB) y un segundo almacén de datos.
 - Keycloak corre en `start-dev` con H2: válido para uso local, no recomendado para producción; riesgo aceptado, a revisar si el sistema se expone.
-- Sin HTTPS, el login y los tokens viajan sin cifrar dentro de la red local; riesgo aceptado porque el sistema es local y sin salida al exterior.
+- En uso solo local, sin HTTPS, el login y los tokens viajan sin cifrar dentro de la red local; riesgo aceptado porque el sistema no sale al exterior. Con el acceso remoto opcional (ADR-17), el HTTPS lo termina el túnel.
 - La consola de administración queda restringida al servidor (ADR-14).
 - El realm se importa solo la primera vez; los cambios posteriores se hacen en la consola de Keycloak.
 - Los cambios de rol se reflejan en el siguiente login.

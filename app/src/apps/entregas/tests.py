@@ -5,12 +5,15 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.test import TestCase
+from django.urls import reverse
 
 from apps.comedores import services as comedor_services
+from apps.comedores.models import Comedor
 from apps.deposito import services as deposito_services
 from apps.entregas import services as entrega_services
 from apps.entregas.models import DetalleEntrega, Entrega
 from apps.seguridad.roles import REFERENTE_COMEDOR
+from apps.seguridad.roles import VOLUNTARIO_DEPOSITO
 
 from . import services
 
@@ -230,3 +233,78 @@ class ConfirmarRecepcionTests(TestCase):
             self._confirmar(nombre="   ")
         actual = services.obtener_entrega(self.entrega.id)
         self.assertEqual(actual.estado, Entrega.Estado.REGISTRADA)
+        self.entrega.refresh_from_db()
+        self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)
+
+
+class NuevaEntregaComedoresHabilitadosTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        usuario = User.objects.create_user(username="voluntario")
+        usuario.groups.add(Group.objects.create(name=VOLUNTARIO_DEPOSITO))
+        self.client.force_login(usuario)
+
+        self.producto = deposito_services.crear_producto(nombre="Arroz habilitados")
+        self.lote = deposito_services.crear_lote(
+            numero_lote="L-HABILITADOS",
+            fecha_vencimiento=date(2027, 1, 15),
+            stock=20,
+            nombre_voluntario="Juan",
+            producto_id=self.producto.id,
+        )
+        self.comedor_habilitado = Comedor.objects.create(
+            nombre="Comedor habilitado",
+            codigo="CP-HAB",
+            direccion="Calle 1",
+            habilitado=True,
+        )
+        self.comedor_no_habilitado = Comedor.objects.create(
+            nombre="Comedor no habilitado",
+            codigo="CP-DESHAB",
+            direccion="Calle 2",
+            habilitado=False,
+        )
+
+    def test_desplegable_muestra_solo_comedores_habilitados(self):
+        response = self.client.get(reverse("nueva_entrega"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'value="{self.comedor_habilitado.id}"')
+        self.assertNotContains(response, f'value="{self.comedor_no_habilitado.id}"')
+        self.assertContains(response, 'id="nombre_voluntario"')
+        self.assertContains(response, "readonly")
+
+    def test_rechaza_post_para_comedor_no_habilitado(self):
+        response = self.client.post(
+            reverse("nueva_entrega"),
+            {
+                "comedor": self.comedor_no_habilitado.id,
+                "lote_id": [self.lote.id],
+                "cantidad": ["2"],
+                "fecha": date.today().isoformat(),
+                "nombre_voluntario": "Juan",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "No se pueden registrar entregas para un comedor no habilitado."
+        )
+        self.assertEqual(Entrega.objects.count(), 0)
+        self.assertEqual(deposito_services.obtener_lote(self.lote.id).stock, 20)
+
+    def test_nombre_voluntario_se_toma_del_usuario_autenticado(self):
+        response = self.client.post(
+            reverse("nueva_entrega"),
+            {
+                "comedor": self.comedor_habilitado.id,
+                "lote_id": [self.lote.id],
+                "cantidad": ["2"],
+                "fecha": date.today().isoformat(),
+                "nombre_voluntario": "Nombre manipulado",
+            },
+        )
+
+        self.assertRedirects(response, reverse("entregas"))
+        entrega = Entrega.objects.get()
+        self.assertEqual(entrega.nombre_voluntario, "voluntario")

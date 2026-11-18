@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import ProtectedError
 from django.shortcuts import redirect, render
@@ -24,6 +25,7 @@ def deposito(request):
                 if not nombre:
                     raise ValidationError("El nombre del producto no puede estar vacío.")
                 deposito_services.crear_producto(nombre=nombre)
+                messages.success(request, f"Producto «{nombre}» agregado al catálogo.")
                 return redirect("deposito")
             except ValidationError as exc:
                 error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
@@ -52,6 +54,7 @@ def deposito(request):
                     nombre_donante=request.POST.get("nombre_donante", ""),
                     producto_id=producto_id,
                 )
+                messages.success(request, "Lote actualizado correctamente.")
                 return redirect("deposito")
             except ObjectDoesNotExist:
                 error = "El lote seleccionado no existe."
@@ -63,6 +66,7 @@ def deposito(request):
             try:
                 lote_id = int(request.POST.get("lote_id", "0"))
                 deposito_services.eliminar_lote(lote_id)
+                messages.success(request, "Lote eliminado.")
                 return redirect("deposito")
             except ObjectDoesNotExist:
                 error = "El lote seleccionado no existe."
@@ -77,13 +81,10 @@ def deposito(request):
                 fecha_ingreso = (
                     date.fromisoformat(fecha_ingreso_str) if fecha_ingreso_str else None
                 )
-                voluntario = (
-                    request.POST.get("nombre_voluntario", "").strip()
-                    or request.user.get_full_name()
-                    or request.user.username
-                )
+                voluntario = request.user.get_full_name() or request.user.username
+                numero_lote = request.POST.get("numero_lote", "")
                 deposito_services.crear_lote(
-                    numero_lote=request.POST.get("numero_lote", ""),
+                    numero_lote=numero_lote,
                     fecha_ingreso=fecha_ingreso,
                     fecha_vencimiento=date.fromisoformat(request.POST.get("vencimiento", "")),
                     stock=int(float(request.POST.get("cantidad", "0"))),
@@ -91,6 +92,7 @@ def deposito(request):
                     nombre_donante=request.POST.get("nombre_donante", ""),
                     producto_id=producto_id,
                 )
+                messages.success(request, f"Lote {numero_lote} agregado correctamente.")
                 return redirect("deposito")
             except ValidationError as exc:
                 error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)

@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.shortcuts import redirect, render
 
@@ -38,6 +39,7 @@ def entregas(request):
                 entrega_services.actualizar_entrega(
                     entrega_id, estado=entrega_services.EstadoEntrega.ANULADA
                 )
+                messages.success(request, f"Entrega #{entrega_id} anulada correctamente.")
                 return redirect("entregas")
             except ObjectDoesNotExist:
                 error = "La entrega seleccionada no existe."
@@ -91,6 +93,11 @@ def nueva_entrega(request):
     if request.method == "POST":
         try:
             comedor_id = int(request.POST.get("comedor", "0"))
+            comedor = comedor_services.obtener_comedor(comedor_id)
+            if not comedor.habilitado:
+                raise ValidationError(
+                    "No se pueden registrar entregas para un comedor no habilitado."
+                )
             lote_ids = request.POST.getlist("lote_id")
             cantidades = request.POST.getlist("cantidad")
             detalles = [
@@ -103,26 +110,25 @@ def nueva_entrega(request):
 
             fecha_str = request.POST.get("fecha", "").strip()
             fecha = date.fromisoformat(fecha_str) if fecha_str else date.today()
-            voluntario = (
-                request.POST.get("nombre_voluntario", "").strip()
-                or request.user.get_full_name()
-                or request.user.username
-            )
+            voluntario = request.user.get_full_name() or request.user.username
             entrega_services.crear_entrega(
                 fecha=fecha,
                 nombre_voluntario=voluntario,
                 comedor_id=comedor_id,
                 detalles=detalles,
             )
+            messages.success(request, "Entrega registrada correctamente.")
             return redirect("entregas")
         except ValidationError as exc:
             error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+        except ObjectDoesNotExist:
+            error = "El comedor seleccionado no existe."
         except ValueError:
             error = "Verificá los datos ingresados (comedor, lotes, cantidades y fecha)."
 
     hoy = date.today()
     lotes_con_stock = deposito_services.listar_lotes(solo_con_stock=True)
-    comedores = comedor_services.listar_comedores()
+    comedores = comedor_services.listar_comedores(habilitado=True)
 
     contexto = {
         "comedores": comedores,

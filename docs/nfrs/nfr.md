@@ -11,7 +11,7 @@ Dominio 1 · Banco de alimentos · Escenario 1A · Red barrial. NFR estrella: **
 | NFR-05 | Tolerancia a fallos del padrón | Si el padrón no responde en 5 s, el sistema no se bloquea. Aplica una política definida (ver ADR-04) y deja constancia de la acción. | Alta |
 | NFR-06 | Recuperabilidad | RPO ≤ 2 días (se pierde como máximo dos días de datos) y RTO ≤ 4 h. | Alta |
 | NFR-07 | Integridad de datos | El stock por lote nunca es negativo; una entrega descuenta stock de forma atómica (todo o nada), incluso ante fallos a mitad de operación. | Alta |
-| NFR-08 | Seguridad | Autenticación obligatoria; permisos por rol (depósito, referente, coordinador); contraseñas con hash; acceso limitado a la red local. | Media |
+| NFR-08 | Seguridad | Autenticación obligatoria; permisos por rol (depósito, referente, coordinador); contraseñas con hash; en uso local el acceso se limita a la red local; con acceso remoto, solo HTTPS y únicamente las rutas permitidas expuestas. | Media |
 | NFR-09 | Disponibilidad | Disponible en el horario operativo del depósito. No se requiere 24/7 ni alta disponibilidad. | Media |
 
 ## NFRs descartados
@@ -39,3 +39,4 @@ HTTPS tampoco es necesario: el sistema es local, dockerizado y sin salida al ext
 | ADR-14 Restricción de la consola de administración de Keycloak | 08 (tensiona 01 y 02) |
 | ADR-15 Separación en capas de servicios y repositorios sobre el ORM | 04, 07 |
 | ADR-16 Ubicación de vistas y plantillas HTML dentro de cada módulo | 01, 04 |
+| ADR-17 Acceso remoto del referente con un túnel ngrok | 08 (tensiona 01, 02 y 09) |
