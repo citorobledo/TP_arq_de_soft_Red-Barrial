@@ -14,7 +14,6 @@ SQLite en un único archivo dentro del volumen `app-data`, con `journal_mode=WAL
 | Alternativa | Ventajas | Desventajas |
 |---|---|---|
 | PostgreSQL | Más robusta ante concurrencia; herramientas de respaldo | Un contenedor más, más memoria y más operación |
-| MySQL/MariaDB | Similar a PostgreSQL | Mismas desventajas |
 
 ## Consecuencias
 - Respaldo copiando el archivo con la API de backup de SQLite, sin detener la app.
