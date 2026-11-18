@@ -1,6 +1,6 @@
 # ADR-03: Ledger de movimientos append-only con FEFO
 
-- **Estado:** Propuesto
+- **Estado:** Aceptada
 - **Fecha:** 2026-11-01
 - **NFR:** 03, 07
 
@@ -9,8 +9,8 @@ Hoy nadie sabe qué lote fue a qué comedor ni cuándo vence. La auditoría que 
 
 ## Decisión
 - El stock de cada lote es **derivado**: suma de movimientos inmutables (ingreso, entrega, ajuste).
-- Los movimientos no se actualizan ni se borran; las correcciones son **contramovimientos**.
-- Cada movimiento registra lote, cantidad, comedor (si corresponde), fecha y usuario.
+- Las entregas no se actualizan ni se borran; las correcciones son **contramovimientos**.
+- Cada entrega registra lote, cantidad, comedor (si corresponde), fecha y usuario.
 - Un movimiento que dejaría el stock en negativo se rechaza dentro de la misma transacción.
 - Política de consumo **FEFO** (first expired, first out): una entrega descuenta primero del lote con vencimiento más próximo; el sistema alerta los lotes por vencer.
 
@@ -19,7 +19,7 @@ Hoy nadie sabe qué lote fue a qué comedor ni cuándo vence. La auditoría que 
 |---|---|---|
 | Saldo mutable por lote | Consulta directa | Se pierde el historial; no cumple NFR-03 |
 | Event sourcing completo | Reconstrucción total | Complejidad desproporcionada para el contexto |
-| FIFO / elección manual del lote | Más simple | No prioriza vencimientos |
+| FIFO | Más simple | No prioriza vencimientos |
 
 ## Consecuencias
 - La auditoría sale del propio modelo de datos.

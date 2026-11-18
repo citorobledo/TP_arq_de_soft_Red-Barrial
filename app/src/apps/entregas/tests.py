@@ -12,15 +12,17 @@ from apps.comedores.models import Comedor
 from apps.deposito import services as deposito_services
 from apps.entregas import services as entrega_services
 from apps.entregas.models import DetalleEntrega, Entrega
+from apps.seguridad.roles import REFERENTE_COMEDOR
 from apps.seguridad.roles import VOLUNTARIO_DEPOSITO
 
 from . import services
-from .models import Entrega
 
 class EntregasServicesTests(TestCase):
     def setUp(self):
         User = get_user_model()
+        grupo_referente, _ = Group.objects.get_or_create(name=REFERENTE_COMEDOR)
         self.user = User.objects.create_user(username="referente1")
+        self.user.groups.add(grupo_referente)
         self.producto = deposito_services.crear_producto(nombre="Arroz")
         self.lote1 = deposito_services.crear_lote(
             numero_lote="L-001",
@@ -61,6 +63,8 @@ class EntregasServicesTests(TestCase):
         # GET
         obtenido = entrega_services.obtener_entrega(self.entrega.id)
         self.assertEqual(obtenido.nombre_voluntario, "Ana")
+        self.assertEqual(obtenido.comedor_codigo, "CP-001")
+        self.assertEqual(obtenido.comedor_nombre, "Comedor Esperanza")
         self.assertEqual(len(obtenido.detalles), 2)
         self.assertEqual(
                     len(entrega_services.listar_entregas(
@@ -84,9 +88,9 @@ class EntregasServicesTests(TestCase):
                     {"lote_id": self.lote2.id, "cantidad": 999},
                 ],
             )
-        self.assertEqual(len(entrega_services.listar_entregas()), 0)
-        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 20)
-        self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 10)
+        self.assertEqual(len(entrega_services.listar_entregas()), 1)
+        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 14)
+        self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 6)
 
     def test_confirmar_y_anular_entrega(self):
         entrega = entrega_services.crear_entrega(
@@ -100,13 +104,13 @@ class EntregasServicesTests(TestCase):
         )
         self.assertEqual(confirmada.estado, Entrega.Estado.CONFIRMADA)
         self.assertIsNotNone(confirmada.fecha_confirmacion)
-        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 12)
+        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 6)
 
         anulada = entrega_services.actualizar_entrega(
             entrega.id, estado=Entrega.Estado.ANULADA
         )
         self.assertEqual(anulada.estado, Entrega.Estado.ANULADA)
-        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 20)
+        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 14)
 
         with self.assertRaises(ValidationError):
             entrega_services.actualizar_entrega(
@@ -121,7 +125,7 @@ class EntregasServicesTests(TestCase):
             detalles=[{"lote_id": self.lote1.id, "cantidad": 5}],
         )
         entrega_services.eliminar_entrega(e1.id)
-        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 20)
+        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 14)
 
         e2 = entrega_services.crear_entrega(
             fecha=date(2026, 11, 14),
@@ -131,7 +135,7 @@ class EntregasServicesTests(TestCase):
         )
         entrega_services.actualizar_entrega(e2.id, estado=Entrega.Estado.ANULADA)
         entrega_services.eliminar_entrega(e2.id)
-        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 20)
+        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 14)
 
     def test_crud_detalle_entrega_y_reajuste_de_stock(self):
         entrega = entrega_services.crear_entrega(
@@ -145,7 +149,7 @@ class EntregasServicesTests(TestCase):
             lote_id=self.lote1.id,
             cantidad=4,
         )
-        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 16)
+        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 10)
         self.assertEqual(
             len(entrega_services.listar_detalles_entrega(entrega_id=entrega.id)), 1
         )
@@ -158,8 +162,8 @@ class EntregasServicesTests(TestCase):
         )
         self.assertEqual(actualizado.lote_id, self.lote2.id)
         self.assertEqual(actualizado.cantidad, 3)
-        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 20)
-        self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 7)
+        self.assertEqual(deposito_services.obtener_lote(self.lote1.id).stock, 14)
+        self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 3)
 
         # No permite eliminar lote referenciado
         with self.assertRaises(ProtectedError):
@@ -167,17 +171,22 @@ class EntregasServicesTests(TestCase):
 
         # DELETE detalle
         entrega_services.eliminar_detalle_entrega(detalle.id)
-        self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 10)
+        self.assertEqual(deposito_services.obtener_lote(self.lote2.id).stock, 6)
         with self.assertRaises(DetalleEntrega.DoesNotExist):
             entrega_services.obtener_detalle_entrega(detalle.id)
 
 class ConfirmarRecepcionTests(TestCase):
     def setUp(self):
         User = get_user_model()
+        grupo_referente, _ = Group.objects.get_or_create(name=REFERENTE_COMEDOR)
         self.referente = User.objects.create_user("ana", password="x")
+        self.referente.groups.add(grupo_referente)
         self.otro = User.objects.create_user("otro", password="x")
-        self.comedor = Comedor.objects.create(
-            nombre="Los Pibes", codigo="CP-001", direccion="Calle 1", usuario=self.referente
+        self.comedor = comedor_services.crear_comedor(
+            nombre="Los Pibes",
+            codigo="CP-001",
+            direccion="Calle 1",
+            usuario_id=self.referente.id,
         )
         self.entrega = services.crear_entrega(
             fecha=date.today(), nombre_voluntario="Miriam", comedor_id=self.comedor.id
@@ -208,23 +217,22 @@ class ConfirmarRecepcionTests(TestCase):
     def test_rechaza_a_un_referente_de_otro_comedor(self):
         with self.assertRaises(ValidationError):
             self._confirmar(usuario=self.otro)
-        self.entrega.refresh_from_db()
-        self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)
-        self.assertIsNone(self.entrega.fecha_confirmacion)
+        actual = services.obtener_entrega(self.entrega.id)
+        self.assertEqual(actual.estado, Entrega.Estado.REGISTRADA)
+        self.assertIsNone(actual.fecha_confirmacion)
 
     def test_rechaza_una_entrega_anulada(self):
         services.actualizar_entrega(self.entrega.id, estado=Entrega.Estado.ANULADA)
         with self.assertRaises(ValidationError):
             self._confirmar()
-        self.entrega.refresh_from_db()
-        self.assertEqual(self.entrega.estado, Entrega.Estado.ANULADA)
+        actual = services.obtener_entrega(self.entrega.id)
+        self.assertEqual(actual.estado, Entrega.Estado.ANULADA)
 
     def test_rechaza_nombre_vacio(self):
         with self.assertRaises(ValidationError):
             self._confirmar(nombre="   ")
-        self.entrega.refresh_from_db()
-        self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)
-
+        actual = services.obtener_entrega(self.entrega.id)
+        self.assertEqual(actual.estado, Entrega.Estado.REGISTRADA)
 
 class NuevaEntregaComedoresHabilitadosTests(TestCase):
     def setUp(self):

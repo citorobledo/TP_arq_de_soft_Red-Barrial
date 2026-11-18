@@ -23,13 +23,3 @@ class Comedor(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - {self.nombre}"
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "nombre": self.nombre,
-            "codigo": self.codigo,
-            "direccion": self.direccion,
-            "habilitado": self.habilitado,
-            "id_usuario": self.usuario_id,
-        }

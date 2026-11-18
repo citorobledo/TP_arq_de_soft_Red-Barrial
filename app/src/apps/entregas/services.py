@@ -19,7 +19,10 @@ from . import repositories
 from .dtos import DetalleEntregaDTO, EntregaDTO
 from .models import DetalleEntrega, Entrega
 
+EstadoEntrega = Entrega.Estado
+
 __all__ = [
+    "EstadoEntrega",
     "EntregaDTO",
     "DetalleEntregaDTO",
     "listar_entregas",
@@ -57,6 +60,8 @@ def _entrega_to_dto(entrega: Entrega) -> EntregaDTO:
         nombre_voluntario=entrega.nombre_voluntario,
         nombre_referente=entrega.nombre_referente,
         comedor_id=entrega.comedor_id,
+        comedor_codigo=entrega.comedor.codigo,
+        comedor_nombre=entrega.comedor.nombre,
         detalles=tuple(_detalle_to_dto(d) for d in entrega.detalles.all()),
     )
 

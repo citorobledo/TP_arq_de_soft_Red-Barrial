@@ -26,3 +26,5 @@ class EntregaDTO:
     comedor_id: int
     detalles: tuple[DetalleEntregaDTO, ...]
     nombre_referente: str = ""
+    comedor_codigo: str = ""
+    comedor_nombre: str = ""

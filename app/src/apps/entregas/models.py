@@ -36,22 +36,6 @@ class Entrega(models.Model):
     def __str__(self):
         return f"Entrega #{self.id} - {self.comedor.codigo} ({self.estado})"
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "fecha": self.fecha.isoformat(),
-            "estado": self.estado,
-            "fecha_registro": (
-                self.fecha_registro.isoformat() if self.fecha_registro else None
-            ),
-            "fecha_confirmacion": (
-                self.fecha_confirmacion.isoformat() if self.fecha_confirmacion else None
-            ),
-            "nombre_voluntario": self.nombre_voluntario,
-            "nombre_referente": self.nombre_referente,
-            "id_comedor": self.comedor_id,
-        }
-
 
 class DetalleEntrega(models.Model):
     id = models.BigAutoField(primary_key=True, db_column="ID")
@@ -81,11 +65,3 @@ class DetalleEntrega(models.Model):
 
     def __str__(self):
         return f"Detalle #{self.id} (Entrega #{self.entrega_id}, Lote {self.lote_id})"
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "cantidad": self.cantidad,
-            "id_lote": self.lote_id,
-            "id_entrega": self.entrega_id,
-        }

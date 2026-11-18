@@ -113,6 +113,14 @@ Asignar previamente un rol al usuario desde la consola de administración para
 verlo reflejado en el panel. La sincronización del padrón no modifica el
 `usuario_id` ni los demás datos locales del comedor.
 
+### Usuarios de prueba
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| voluntario | voluntario123 | `voluntario_deposito` |
+| referente | referente123 | `referente_comedor` |
+| coordinador | coordinador123 | `coordinador` |
+
 ## Uso desde otras computadoras de la red
 
 En `.env`, cambiar `PUBLIC_HOST` por la IP o el nombre de red de la computadora

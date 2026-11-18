@@ -1,7 +1,7 @@
 """Panel del coordinador: consulta el estado general y exporta reportes CSV."""
 
 import csv
-from datetime import date, timedelta
+from datetime import date
 from typing import Optional
 
 from django.core.exceptions import ValidationError
@@ -75,14 +75,11 @@ def _filtrar_por_fecha(filas: list[dict], desde: Optional[date], hasta: Optional
 def _datos():
     """Obtiene la información del panel consumiendo únicamente los `services.py` de cada módulo."""
     hoy = date.today()
-    limite_vencimiento = hoy + timedelta(days=7)
 
     lotes = deposito_services.listar_lotes()
+    lotes_proximos_7d = deposito_services.listar_lotes_por_vencer(hoy=hoy)
     entregas = entrega_services.listar_entregas()
     comedores_dtos = comedor_services.listar_comedores()
-
-    mapa_lotes = {l.id: l for l in lotes}
-    mapa_comedores = {c.id: f"{c.codigo} - {c.nombre}" for c in comedores_dtos}
 
     ingresos = [
         {
@@ -101,16 +98,19 @@ def _datos():
 
     entregas_reporte = []
     for entrega in entregas:
-        destino = mapa_comedores.get(entrega.comedor_id, f"Comedor #{entrega.comedor_id}")
+        destino = (
+            f"{entrega.comedor_codigo} - {entrega.comedor_nombre}"
+            if entrega.comedor_codigo
+            else f"Comedor #{entrega.comedor_id}"
+        )
         for detalle in entrega.detalles:
-            lote_info = mapa_lotes.get(detalle.lote_id)
             entregas_reporte.append(
                 {
                     "fecha": entrega.fecha,
                     "tipo": "entrega",
                     "tipo_texto": "Entrega",
-                    "alimento": lote_info.nombre_producto if lote_info else f"Lote #{detalle.lote_id}",
-                    "lote": lote_info.numero_lote if lote_info else f"#{detalle.lote_id}",
+                    "alimento": detalle.nombre_producto or f"Lote #{detalle.lote_id}",
+                    "lote": detalle.numero_lote or f"#{detalle.lote_id}",
                     "cantidad": detalle.cantidad,
                     "contraparte": destino,
                     "estado": entrega.estado,
@@ -120,7 +120,9 @@ def _datos():
     entregas_reporte.sort(key=lambda m: m["fecha"], reverse=True)
 
     movimientos = ingresos + [
-        e for e in entregas_reporte if e["estado"] != "anulada"
+        e
+        for e in entregas_reporte
+        if e["estado"] != entrega_services.EstadoEntrega.ANULADA
     ]
     movimientos.sort(key=lambda m: m["fecha"], reverse=True)
 
@@ -132,8 +134,7 @@ def _datos():
             "stock": l.stock,
             "donante": l.nombre_donante or "—",
         }
-        for l in lotes
-        if l.stock > 0 and hoy <= l.fecha_vencimiento <= limite_vencimiento
+        for l in lotes_proximos_7d
     ]
 
     lotes_por_vencer = [
@@ -161,7 +162,11 @@ def _datos():
         {
             "id": e.id,
             "fecha": e.fecha,
-            "comedor": mapa_comedores.get(e.comedor_id, f"Comedor #{e.comedor_id}"),
+            "comedor": (
+                f"{e.comedor_codigo} - {e.comedor_nombre}"
+                if e.comedor_codigo
+                else f"Comedor #{e.comedor_id}"
+            ),
             "estado": e.estado,
             "fecha_registro": e.fecha_registro,
             "fecha_confirmacion": e.fecha_confirmacion,
@@ -177,7 +182,9 @@ def _datos():
             "stock_kg": sum(l.stock for l in lotes),
             "ingresos_hoy": sum(1 for l in lotes if l.fecha_ingreso == hoy),
             "entregas_hoy": sum(
-                1 for e in entregas if e.fecha == hoy and e.estado != "anulada"
+                1
+                for e in entregas
+                if e.fecha == hoy and e.estado != entrega_services.EstadoEntrega.ANULADA
             ),
             "por_vencer": len(lotes_por_vencer_7d),
         },
@@ -207,14 +214,6 @@ def coordinador(request):
     if request.method == "POST":
         try:
             usuario_id = int(request.POST.get("usuario_id", "0"))
-            referentes_validos = {
-                r.id for r in seguridad_services.listar_usuarios_por_rol(REFERENTE_COMEDOR)
-            }
-            if usuario_id not in referentes_validos:
-                raise ValidationError(
-                    "El usuario seleccionado no tiene el rol 'referente_comedor'."
-                )
-
             comedor_services.crear_comedor(
                 nombre=request.POST.get("nombre", ""),
                 codigo=request.POST.get("codigo", ""),

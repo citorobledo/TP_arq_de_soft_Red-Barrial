@@ -1,6 +1,6 @@
 """Casos de uso y reglas de negocio para Producto y Lote (independientes de HTTP y del ORM)."""
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 from django.core.exceptions import ValidationError
@@ -19,6 +19,7 @@ __all__ = [
     "actualizar_producto",
     "eliminar_producto",
     "listar_lotes",
+    "listar_lotes_por_vencer",
     "obtener_lote",
     "crear_lote",
     "actualizar_lote",
@@ -101,6 +102,20 @@ def listar_lotes(
     ]
 
 
+def listar_lotes_por_vencer(
+    *,
+    dias: int = 7,
+    hoy: Optional[date] = None,
+) -> list[LoteDTO]:
+    """Lista lotes con stock disponible que vencen dentro de los próximos `dias` días."""
+    fecha_base = hoy if hoy is not None else date.today()
+    limite = fecha_base + timedelta(days=dias)
+    return [
+        _to_dto(lote)
+        for lote in repositories.listar_por_vencer(fecha_base, limite)
+    ]
+
+
 def obtener_lote(lote_id: int) -> LoteDTO:
     """Obtiene un lote por su ID con su producto asociado."""
     return _to_dto(repositories.obtener_por_id(lote_id))
@@ -118,6 +133,8 @@ def crear_lote(
     fecha_ingreso: Optional[date] = None,
 ) -> LoteDTO:
     """Crea un nuevo lote validando sus reglas de negocio."""
+    if stock is not None and stock < 0:
+        raise ValidationError({"stock": "El stock del lote debe ser mayor o igual a cero."})
     lote = Lote(
         numero_lote=numero_lote.strip(),
         fecha_vencimiento=fecha_vencimiento,
@@ -145,6 +162,8 @@ def actualizar_lote(
     producto_id: Optional[int] = None,
 ) -> LoteDTO:
     """Actualiza los campos provistos de un lote existente."""
+    if stock is not None and stock < 0:
+            raise ValidationError({"stock": "El stock del lote debe ser mayor o igual a cero."})
     lote = repositories.obtener_por_id(lote_id, bloquear=True)
     if numero_lote is not None:
         lote.numero_lote = numero_lote.strip()
