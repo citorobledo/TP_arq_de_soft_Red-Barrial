@@ -6,7 +6,6 @@ from typing import Optional
 from ninja import Router, Schema
 
 from . import services
-from .models import Entrega
 
 router = Router()
 
@@ -36,18 +35,16 @@ class DetalleEntregaOut(Schema):
 
 
 class EntregaIn(Schema):
+    # El voluntario sale de la sesión y el estado inicial es siempre "registrada".
     fecha: date
-    nombre_voluntario: str
     comedor_id: int
-    estado: str = Entrega.Estado.REGISTRADA
     detalles: Optional[list[DetalleEntregaItemIn]] = None
 
 
 class EntregaUpdateIn(Schema):
+    # El estado y la confirmación no se modifican por acá: la recepción la confirma
+    # el referente desde su pantalla (confirmar_recepcion).
     fecha: Optional[date] = None
-    estado: Optional[str] = None
-    fecha_confirmacion: Optional[datetime] = None
-    nombre_voluntario: Optional[str] = None
     comedor_id: Optional[int] = None
 
 
@@ -136,6 +133,7 @@ def obtener_entrega(request, entrega_id: int):
 @router.post("/", response={201: EntregaOut}, summary="Registrar una nueva entrega")
 def crear_entrega(request, payload: EntregaIn):
     datos = payload.model_dump()
+    datos["nombre_voluntario"] = request.user.get_full_name() or request.user.username
     return 201, services.crear_entrega(**datos)
 
 

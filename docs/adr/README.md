@@ -18,5 +18,6 @@
 | [ADR-14](0014-restriccion-consola-admin-keycloak.md) | Restricción de la consola de administración de Keycloak | 08 | Propuesto |
 | [ADR-15](0015-arquitectura-limpia-repositorios-servicios.md) | Separación en capas de servicios y repositorios sobre el ORM | 04, 07 | Aceptado |
 | [ADR-16](0016-plantillas-vistas-por-modulo.md) | Ubicación de vistas y plantillas HTML dentro de cada módulo | 01, 04 | Aceptado |
+| [ADR-17](0017-acceso-remoto-ngrok.md) | Acceso remoto del referente con un túnel ngrok | 08 | Propuesto |
 
 Plantilla: [0000-plantilla.md](0000-plantilla.md). Requisitos: [../nfr.md](../nfr.md).

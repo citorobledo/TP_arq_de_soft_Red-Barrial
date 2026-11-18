@@ -13,10 +13,14 @@ from apps.comedores.api import router as comedores_router
 from apps.deposito.api import productos_router
 from apps.deposito.api import router as deposito_router
 from apps.entregas.api import router as entregas_router
+from apps.seguridad.api_auth import AuthPorRol
+from apps.seguridad.roles import COORDINADOR, VOLUNTARIO_DEPOSITO
 
-# Para exigir sesión OIDC de Keycloak en toda la API, importar `django_auth` de `ninja.security`
-# y pasar `auth=django_auth` al instanciar NinjaAPI.
+# Toda la API exige sesión (iniciada con Keycloak) y rol de depósito o coordinador.
+# Al declararlo acá, cualquier endpoint nuevo queda protegido por defecto.
+# El referente de comedor usa la interfaz web, no esta API.
 api = NinjaAPI(
+    auth=AuthPorRol(VOLUNTARIO_DEPOSITO, COORDINADOR),
     title="Red Barrial · Banco de Alimentos API",
     version="1.0.0",
     description="API REST para la gestión de productos, lotes de depósito, comedores y entregas.",
