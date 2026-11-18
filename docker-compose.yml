@@ -1,4 +1,4 @@
-version: "3.8"
+#version: "3.8"
 services:
   keycloak-data-permissions:
     image: alpine:3.20
@@ -62,7 +62,7 @@ services:
   # Apunta únicamente al puerto 8090 del proxy: la app, Keycloak, el padrón y la
   # base de datos no se publican directamente.
   ngrok:
-    image: ngrok/ngrok:latest
+    image: ngrok/ngrok:3.39.0-alpine
     profiles: ["publico"]
     command: ["http", "keycloak-proxy:8090", "--url=${PUBLIC_URL:-}"]
     environment:
