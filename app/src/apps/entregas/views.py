@@ -93,6 +93,11 @@ def nueva_entrega(request):
     if request.method == "POST":
         try:
             comedor_id = int(request.POST.get("comedor", "0"))
+            comedor = comedor_services.obtener_comedor(comedor_id)
+            if not comedor.habilitado:
+                raise ValidationError(
+                    "No se pueden registrar entregas para un comedor no habilitado."
+                )
             lote_ids = request.POST.getlist("lote_id")
             cantidades = request.POST.getlist("cantidad")
             detalles = [
@@ -119,12 +124,14 @@ def nueva_entrega(request):
             return redirect("entregas")
         except ValidationError as exc:
             error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+        except ObjectDoesNotExist:
+            error = "El comedor seleccionado no existe."
         except ValueError:
             error = "Verificá los datos ingresados (comedor, lotes, cantidades y fecha)."
 
     hoy = date.today()
     lotes_con_stock = deposito_services.listar_lotes(solo_con_stock=True)
-    comedores = comedor_services.listar_comedores()
+    comedores = comedor_services.listar_comedores(habilitado=True)
 
     contexto = {
         "comedores": comedores,
