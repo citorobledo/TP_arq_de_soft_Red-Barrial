@@ -260,6 +260,8 @@ class NuevaEntregaComedoresHabilitadosTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f'value="{self.comedor_habilitado.id}"')
         self.assertNotContains(response, f'value="{self.comedor_no_habilitado.id}"')
+        self.assertContains(response, 'id="nombre_voluntario"')
+        self.assertContains(response, "readonly")
 
     def test_rechaza_post_para_comedor_no_habilitado(self):
         response = self.client.post(
@@ -279,3 +281,19 @@ class NuevaEntregaComedoresHabilitadosTests(TestCase):
         )
         self.assertEqual(Entrega.objects.count(), 0)
         self.assertEqual(deposito_services.obtener_lote(self.lote.id).stock, 20)
+
+    def test_nombre_voluntario_se_toma_del_usuario_autenticado(self):
+        response = self.client.post(
+            reverse("nueva_entrega"),
+            {
+                "comedor": self.comedor_habilitado.id,
+                "lote_id": [self.lote.id],
+                "cantidad": ["2"],
+                "fecha": date.today().isoformat(),
+                "nombre_voluntario": "Nombre manipulado",
+            },
+        )
+
+        self.assertRedirects(response, reverse("entregas"))
+        entrega = Entrega.objects.get()
+        self.assertEqual(entrega.nombre_voluntario, "voluntario")

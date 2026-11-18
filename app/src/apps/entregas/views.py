@@ -112,11 +112,7 @@ def nueva_entrega(request):
 
             fecha_str = request.POST.get("fecha", "").strip()
             fecha = date.fromisoformat(fecha_str) if fecha_str else date.today()
-            voluntario = (
-                request.POST.get("nombre_voluntario", "").strip()
-                or request.user.get_full_name()
-                or request.user.username
-            )
+            voluntario = request.user.get_full_name() or request.user.username
             entrega_services.crear_entrega(
                 fecha=fecha,
                 nombre_voluntario=voluntario,
