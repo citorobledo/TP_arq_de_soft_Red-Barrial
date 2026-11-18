@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva entrega · Red barrial{% endblock %}
+
+{% block contenido %}
+<section class="hero">
+  <svg class="sol" viewBox="0 0 64 64" aria-hidden="true">
+    <g stroke="#f6b40e" stroke-width="3" stroke-linecap="round">
+      <line x1="32" y1="2" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="62"/>
+      <line x1="2" y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="62" y2="32"/>
+      <line x1="10.8" y1="10.8" x2="17.9" y2="17.9"/><line x1="46.1" y1="46.1" x2="53.2" y2="53.2"/>
+      <line x1="10.8" y1="53.2" x2="17.9" y2="46.1"/><line x1="46.1" y1="17.9" x2="53.2" y2="10.8"/>
+    </g>
+    <circle cx="32" cy="32" r="13" fill="#f6b40e"/>
+  </svg>
+  <h1>Registrar nueva entrega</h1>
+  <p>Consultá los lotes disponibles ordenados por vencimiento (FEFO) y verificá bien los datos antes de confirmar: una entrega registrada no se edita ni se borra.</p>
+</section>
+
+<nav class="tabs-nav" aria-label="Navegación de depósito">
+  <a class="tab" href="{% url 'deposito' %}">Depósito y Lotes</a>
+  <a class="tab activo" href="{% url 'entregas' %}">Entregas a Comedores</a>
+</nav>
+
+<div class="barra-volver">
+  <a class="boton secundario" href="{% url 'entregas' %}">← Volver al historial de entregas</a>
+</div>
+
+{% if error %}
+  <p class="aviso-rol" role="alert">{{ error }}</p>
+{% endif %}
+
+<section class="listados">
+  <div class="tarjeta">
+    <h2>Lotes disponibles (orden FEFO)</h2>
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Lote</th>
+            <th>Producto</th>
+            <th>Vencimiento</th>
+            <th class="num">Stock</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in lotes %}
+          <tr>
+            <td><strong>{{ l.numero_lote }}</strong></td>
+            <td>{{ l.nombre_producto }}</td>
+            <td>{{ l.fecha_vencimiento }}</td>
+            <td class="num">{{ l.stock }}</td>
+            <td>
+              <button
+                type="button"
+                class="secundario boton-tabla btn-agregar-lote-rapido"
+                data-lote-id="{{ l.id }}"
+              >+ Agregar</button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="vacio">No hay lotes con stock disponible en este momento.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Datos de la entrega</h2>
+    <form id="form-nueva-entrega" method="post" action="{% url 'nueva_entrega' %}">
+      {% csrf_token %}
+      <label for="comedor">Comedor habilitado</label>
+      <select id="comedor" name="comedor" required>
+        <option value="">Elegí un comedor…</option>
+        {% for c in comedores %}<option value="{{ c.id }}">{{ c.codigo }} - {{ c.nombre }}</option>{% endfor %}
+      </select>
+
+      <label>Lotes y cantidades a entregar</label>
+      <div id="items-entrega" class="items-entrega">
+        <div class="item-entrega">
+          <select name="lote_id" aria-label="Lote disponible" required>
+            <option value="">Elegí un lote…</option>
+            {% for l in lotes %}
+              <option value="{{ l.id }}" data-max="{{ l.stock }}">{{ l.numero_lote }} · {{ l.nombre_producto }} (Stock: {{ l.stock }} | Vence: {{ l.fecha_vencimiento }})</option>
+            {% endfor %}
+          </select>
+          <input name="cantidad" type="number" min="1" step="1" placeholder="Cant." aria-label="Cantidad" required>
+          <button type="button" class="secundario boton-quitar" title="Quitar fila" disabled>×</button>
+        </div>
+      </div>
+
+      <button type="button" id="agregar-item-entrega" class="secundario boton-agregar-fila">+ Agregar otro lote / producto</button>
+
+      <div class="fila">
+        <div>
+          <label for="fecha">Fecha de entrega</label>
+          <input id="fecha" name="fecha" type="date" value="{{ hoy }}" required>
+        </div>
+        <div>
+          <label for="nombre_voluntario">Voluntario</label>
+          <input id="nombre_voluntario" name="nombre_voluntario" type="text" value="{{ user.get_full_name|default:user.username }}" readonly>
+        </div>
+      </div>
+
+      <button type="button" id="btn-previsualizar-entrega">Revisar y confirmar entrega</button>
+    </form>
+  </div>
+</section>
+
+<dialog id="dialogo-confirmar-entrega" class="modal-dialog">
+  <div class="modal-contenido">
+    <h2>Confirmar registro de entrega</h2>
+    <p class="ayuda">Verificá los datos antes de guardar. Una vez registrada, esta entrega no se podrá editar ni eliminar (solo anular).</p>
+    <div id="resumen-confirmacion" class="resumen-confirmacion"></div>
+    <div class="modal-acciones">
+      <button type="button" class="secundario" id="cancelar-confirmar-entrega">Volver y corregir</button>
+      <button type="button" id="confirmar-envio-entrega">Confirmar y registrar</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  (function () {
+    const form = document.getElementById('form-nueva-entrega');
+    const contenedor = document.getElementById('items-entrega');
+    const btnAgregar = document.getElementById('agregar-item-entrega');
+    const btnPrevisualizar = document.getElementById('btn-previsualizar-entrega');
+    const dialog = document.getElementById('dialogo-confirmar-entrega');
+    const resumenEl = document.getElementById('resumen-confirmacion');
+    const btnCancelar = document.getElementById('cancelar-confirmar-entrega');
+    const btnConfirmar = document.getElementById('confirmar-envio-entrega');
+
+    if (!form || !contenedor) return;
+
+    function actualizarBotonesQuitar() {
+      const filas = contenedor.querySelectorAll('.item-entrega');
+      filas.forEach((fila) => {
+        const btn = fila.querySelector('.boton-quitar');
+        if (btn) btn.disabled = filas.length <= 1;
+      });
+    }
+
+    function agregarFila(loteIdPreseleccionado) {
+      const primera = contenedor.querySelector('.item-entrega');
+      if (!primera) return;
+
+      // Si hay una fila vacía, reutilizarla al hacer clic en "+ Agregar" de la tabla
+      if (loteIdPreseleccionado) {
+        const filas = contenedor.querySelectorAll('.item-entrega');
+        for (const fila of filas) {
+          const sel = fila.querySelector('select');
+          if (sel && !sel.value) {
+            sel.value = loteIdPreseleccionado;
+            fila.querySelector('input')?.focus();
+            return;
+          }
+        }
+      }
+
+      const nueva = primera.cloneNode(true);
+      const select = nueva.querySelector('select');
+      const input = nueva.querySelector('input');
+      if (select) select.value = loteIdPreseleccionado || '';
+      if (input) input.value = '';
+      contenedor.appendChild(nueva);
+      actualizarBotonesQuitar();
+      if (loteIdPreseleccionado) {
+        input?.focus();
+      }
+    }
+
+    btnAgregar?.addEventListener('click', () => agregarFila(''));
+
+    document.querySelectorAll('.btn-agregar-lote-rapido').forEach((btn) => {
+      btn.addEventListener('click', () => agregarFila(btn.dataset.loteId));
+    });
+
+    contenedor.addEventListener('click', (e) => {
+      const btn = e.target.closest('.boton-quitar');
+      if (!btn || btn.disabled) return;
+      const fila = btn.closest('.item-entrega');
+      if (fila && contenedor.querySelectorAll('.item-entrega').length > 1) {
+        fila.remove();
+        actualizarBotonesQuitar();
+      }
+    });
+
+    btnPrevisualizar?.addEventListener('click', () => {
+      if (!form.reportValidity()) return;
+
+      const comedorSel = document.getElementById('comedor');
+      const comedorTexto = comedorSel.options[comedorSel.selectedIndex]?.text || '';
+      const fecha = document.getElementById('fecha').value;
+      const voluntario = document.getElementById('nombre_voluntario').value;
+
+      const items = [];
+      contenedor.querySelectorAll('.item-entrega').forEach((fila) => {
+        const sel = fila.querySelector('select');
+        const qty = fila.querySelector('input')?.value;
+        const loteTexto = sel.options[sel.selectedIndex]?.text || '';
+        if (sel.value && qty) {
+          items.push(`<li><strong>${qty}</strong> u. — ${loteTexto}</li>`);
+        }
+      });
+
+      resumenEl.innerHTML = `
+        <p><strong>Comedor:</strong> ${comedorTexto}</p>
+        <p><strong>Fecha:</strong> ${fecha} &nbsp;|&nbsp; <strong>Voluntario:</strong> ${voluntario}</p>
+        <ul>${items.join('')}</ul>
+      `;
+      dialog.showModal();
+    });
+
+    btnCancelar?.addEventListener('click', () => dialog.close());
+    dialog?.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    btnConfirmar?.addEventListener('click', () => {
+      dialog.close();
+      form.submit();
+    });
+  })();
+</script>
+{% endblock %}

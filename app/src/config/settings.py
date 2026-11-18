@@ -24,6 +24,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "mozilla_django_oidc",
     "apps.seguridad",
+    "apps.deposito",
+    "apps.comedores",
+    "apps.entregas",
+    "apps.reportes",
 ]
 
 MIDDLEWARE = [
@@ -94,6 +98,9 @@ OIDC_OP_TOKEN_ENDPOINT = env("OIDC_OP_TOKEN_ENDPOINT")
 OIDC_OP_USER_ENDPOINT = env("OIDC_OP_USER_ENDPOINT")  # requerido por la librería; no se consulta (ver backends.py)
 OIDC_OP_JWKS_ENDPOINT = env("OIDC_OP_JWKS_ENDPOINT")
 OIDC_OP_LOGOUT_ENDPOINT = env("OIDC_OP_LOGOUT_ENDPOINT")
+
+PADRON_URL = env("PADRON_URL", "http://padron-mock:8001")
+PADRON_TIMEOUT_SECONDS = float(env("PADRON_TIMEOUT_SECONDS", "10"))
 
 OIDC_STORE_ID_TOKEN = True  # necesario para cerrar también la sesión en Keycloak
 OIDC_OP_LOGOUT_URL_METHOD = "apps.seguridad.logout.keycloak_logout_url"

@@ -1,0 +1,8 @@
+.hero.sin-sol { padding-left: 28px; }
+.hero .comedores { margin-top: 8px; font-weight: 600; }
+.resumen.dos { grid-template-columns: repeat(2, 1fr); }
+.tarjeta + .tarjeta { margin-top: 18px; }
+.tarjeta td form button { margin-top: 0; width: auto; padding: 7px 14px; }
+.aviso { margin: 0 0 18px; padding: 10px 14px; border-radius: 10px; background: var(--celeste-claro); border: 1px solid var(--celeste-borde); color: var(--azul-oscuro); }
+.aviso.success { background: #dff3e7; border-color: #b6e0c4; color: var(--ok); }
+.aviso.error { background: #fdeaea; border-color: #f0b8b8; color: #8a1f1f; }

@@ -5,8 +5,8 @@ barrial de comedores.
 
 > **Estado del proyecto:** la base web y la autenticación están implementadas,
 > pero todavía no están desarrolladas las funciones de negocio para registrar
-> donaciones, lotes o entregas. El padrón disponible es un servicio simulado y
-> aún no está integrado con la aplicación.
+> donaciones, lotes o entregas. El padrón disponible es un servicio simulado;
+> sus comedores se sincronizan con la aplicación al iniciar el contenedor.
 
 ## Funcionalidad disponible
 
@@ -17,6 +17,8 @@ barrial de comedores.
 - Sincronización de los roles de Keycloak con grupos de Django. Los roles
   configurados son `voluntario_deposito`, `referente_comedor` y `coordinador`.
 - API simulada del padrón provincial, con demoras y errores configurables.
+- Sincronización de comedores del padrón a SQLite al iniciar el contenedor de
+  Django: actualiza solo el estado de los registros locales con código coincidente.
 - Persistencia preparada con SQLite y volumen Docker; todavía no hay modelos ni
   operaciones de negocio para movimientos de alimentos.
 
@@ -32,7 +34,7 @@ pruebas automatizadas.
 | Aplicación web | Django 5.1+, Python 3.12, Gunicorn y plantillas renderizadas en el servidor. |
 | Identidad | Keycloak 26 por OIDC; un inicializador corrige los permisos del volumen de datos antes del arranque y un proxy Nginx bloquea la consola administrativa en el puerto de login. |
 | Persistencia | SQLite en modo WAL para Django; H2 en archivo para Keycloak. Ambos datos viven en volúmenes Docker. |
-| Padrón simulado | FastAPI y Uvicorn; expone endpoints REST con demoras y fallas configurables. |
+| Padrón simulado | FastAPI y Uvicorn; expone endpoints REST con demoras y fallas configurables. Django sincroniza sus comedores al arrancar. |
 | Orquestación | Docker Compose inicia la aplicación, Keycloak, su proxy y el mock. |
 
 ## Requisitos
@@ -65,8 +67,10 @@ docker compose up -d --build
 ```
 
 Compose inicializa automáticamente los permisos del volumen de Keycloak antes
-de iniciar el servicio. La aplicación ejecuta las migraciones y recopila los
-archivos estáticos al iniciar. Para detener los servicios:
+de iniciar el servicio. La aplicación ejecuta las migraciones, consulta
+`http://padron-mock:8001/comedores` y actualiza únicamente `habilitado` en los
+comedores locales cuyo `codigo` coincide con el padrón. No crea comedores ni
+cambia sus demás datos. Para detener los servicios:
 
 ```powershell
 docker compose down
@@ -82,6 +86,8 @@ salvo que se quieran eliminar también esos datos.
 | Inicio de la aplicación | http://localhost:8000/ | Página pública; desde allí se inicia sesión |
 | Inicio de sesión OIDC | http://localhost:8000/oidc/authenticate/ | Inicia el redireccionamiento a Keycloak |
 | Panel de la aplicación | http://localhost:8000/panel/ | Requiere iniciar sesión; muestra usuario y roles |
+| Panel de voluntario deposito | http://localhost:8000/deposito/ | sesion iniciada con el rol; muestra ingreso y egreso mercaderia |
+| Panel de coordinador | http://localhost:8000/cordinador/ | sesion iniciada con el rol; muestra coordinador ve todo el movimiento,prontos a vencer y exporta reportes |
 | Retorno OIDC | http://localhost:8000/oidc/callback/ | URL de retorno de Keycloak; no abrir manualmente |
 | Cierre de sesión OIDC | http://localhost:8000/oidc/logout/ | Se envía mediante el formulario de cierre de sesión de la aplicación |
 | Consola de administración de Keycloak | http://localhost:8081/admin/ | Sólo accesible desde la computadora que ejecuta Docker; credenciales de administrador de `.env` |
@@ -92,6 +98,8 @@ salvo que se quieran eliminar también esos datos.
 | Salud del padrón simulado | http://localhost:8001/health | Responde `{"status":"ok"}` |
 | Lista de comedores de prueba | http://localhost:8001/comedores | API de ejemplo; puede demorar o responder HTTP 503 |
 | Consulta de comedor de prueba | http://localhost:8001/comedores/CP-001 | API de ejemplo; puede demorar o responder HTTP 503 |
+| Swagger UI de la OpenAPI | http://localhost:8000/api/docs | Documentación en la especificación OpenAPI en la interfaz visual |
+| JSON de la OpenAPI | http://localhost:8000/api/openapi.json | Documentación en la especificación OpenAPI en formato JSON |
 
 El realm `red-barrial` y el cliente OIDC `red-barrial-web` se importan al
 iniciar Keycloak. No se crean usuarios automáticamente: hay que dar de alta
@@ -102,9 +110,8 @@ pantallas de negocio con permisos por rol.
 Para comprobar el flujo principal, abrir `/`, iniciar sesión desde el botón
 **Ingresar con Keycloak** y verificar que se vuelve al panel en `/panel/`.
 Asignar previamente un rol al usuario desde la consola de administración para
-verlo reflejado en el panel. El padrón es un servicio independiente: sus
-endpoints permiten probar el mock, pero todavía no están conectados a la
-aplicación.
+verlo reflejado en el panel. La sincronización del padrón no modifica el
+`usuario_id` ni los demás datos locales del comedor.
 
 ## Uso desde otras computadoras de la red
 
@@ -182,9 +189,14 @@ El servicio `padron-mock` ofrece:
 - `GET /comedores`: lista de comedores de ejemplo.
 - `GET /comedores/{codigo}`: consulta un comedor por código.
 
-Las consultas al padrón pueden demorarse y fallar con HTTP 503 según las
-variables `MOCK_LATENCY_*` y `MOCK_FAILURE_RATE`. Los códigos y datos son
-estáticos y ficticios. La aplicación Django aún no consume estos endpoints.
+Los registros incluyen `codigo`, `nombre`, `direccion`, `usuario_id` y
+`habilitado`. Al iniciar, Django solo consume `codigo` y `habilitado` para
+actualizar el estado de los comedores locales que encuentre por código; no
+crea comedores ni modifica `nombre`, `direccion` o `usuario_id`. Los códigos
+sin coincidencia se ignoran. Las consultas al padrón pueden demorarse y fallar
+con HTTP 503 según las variables
+`MOCK_LATENCY_*` y `MOCK_FAILURE_RATE`; la aplicación reintenta la consulta al
+iniciar.
 
 ## Respaldo y restauración
 
