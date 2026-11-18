@@ -1,5 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+
+from . import services as seguridad_services
 from .roles import COORDINADOR, REFERENTE_COMEDOR, VOLUNTARIO_DEPOSITO
 
 def home(request):
@@ -15,7 +17,7 @@ DESTINO_POR_ROL = [
 
 @login_required
 def panel(request):
-    roles = set(request.user.groups.values_list("name", flat=True))
+    roles = set(seguridad_services.listar_roles_de_usuario(request.user.id))
     for rol, nombre_url in DESTINO_POR_ROL:
         if rol in roles:
             return redirect(nombre_url)

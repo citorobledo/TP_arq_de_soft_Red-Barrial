@@ -3,6 +3,7 @@ from datetime import date
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.test import TestCase
@@ -10,14 +11,18 @@ from django.test import TestCase
 from apps.comedores import services as comedor_services
 from apps.comedores.models import Comedor
 from apps.entregas import services as entrega_services
+from apps.seguridad.roles import REFERENTE_COMEDOR
 
 
 class ComedoresServicesTests(TestCase):
 
     def setUp(self):
         User = get_user_model()
+        grupo_referente, _ = Group.objects.get_or_create(name=REFERENTE_COMEDOR)
         self.user1 = User.objects.create_user(username="referente1")
+        self.user1.groups.add(grupo_referente)
         self.user2 = User.objects.create_user(username="referente2")
+        self.user2.groups.add(grupo_referente)
         self.comedor = comedor_services.crear_comedor(
             nombre="  Comedor Sol  ",
             codigo="  CP-001  ",
@@ -66,6 +71,22 @@ class ComedoresServicesTests(TestCase):
                 codigo="CP-010",
                 direccion="Calle 2",
                 usuario_id=self.user2.id,
+            )
+
+    def test_no_permite_usuario_sin_rol_referente(self):
+        User = get_user_model()
+        sin_rol = User.objects.create_user(username="sin_rol")
+        with self.assertRaises(ValidationError):
+            comedor_services.crear_comedor(
+                nombre="Comedor Sin Rol",
+                codigo="CP-099",
+                direccion="Calle 99",
+                usuario_id=sin_rol.id,
+            )
+        with self.assertRaises(ValidationError):
+            comedor_services.actualizar_comedor(
+                self.comedor.id,
+                usuario_id=sin_rol.id,
             )
 
     def test_no_permite_eliminar_comedor_con_entregas(self):

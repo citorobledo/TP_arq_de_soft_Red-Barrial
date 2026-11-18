@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
@@ -100,7 +100,7 @@ class DepositoServicesTests(TestCase):
             producto_id=self.arroz.id,
         )
         lote_cercano = deposito_services.crear_lote(
-            numero_lote="L-001",
+            numero_lote="L-004",
             fecha_vencimiento=date(2027, 1, 15),
             stock=5,
             nombre_voluntario="Ana",
@@ -115,7 +115,10 @@ class DepositoServicesTests(TestCase):
         )
 
         con_stock = list(deposito_services.listar_lotes(solo_con_stock=True))
-        self.assertEqual([l.id for l in con_stock], [lote_cercano.id, lote_lejano.id])
+        self.assertEqual(
+            [l.id for l in con_stock],
+            [lote_cercano.id, self.lote.id, lote_lejano.id],
+        )
 
         solo_fideos = list(deposito_services.listar_lotes(producto_id=self.fideos.id))
         self.assertEqual(len(solo_fideos), 1)
@@ -154,3 +157,44 @@ class DepositoServicesTests(TestCase):
                 nombre_voluntario="Luis",
                 producto_id=self.arroz.id,
             )
+
+    def test_listar_lotes_por_vencer(self):
+        hoy = date(2026, 11, 17)
+        lote_hoy = deposito_services.crear_lote(
+            numero_lote="L-HOY",
+            fecha_vencimiento=hoy,
+            stock=5,
+            nombre_voluntario="Ana",
+            producto_id=self.arroz.id,
+        )
+        lote_en_7d = deposito_services.crear_lote(
+            numero_lote="L-7D",
+            fecha_vencimiento=hoy + timedelta(days=7),
+            stock=3,
+            nombre_voluntario="Ana",
+            producto_id=self.arroz.id,
+        )
+        deposito_services.crear_lote(
+            numero_lote="L-VENCIDO",
+            fecha_vencimiento=hoy - timedelta(days=1),
+            stock=4,
+            nombre_voluntario="Ana",
+            producto_id=self.arroz.id,
+        )
+        deposito_services.crear_lote(
+            numero_lote="L-8D",
+            fecha_vencimiento=hoy + timedelta(days=8),
+            stock=4,
+            nombre_voluntario="Ana",
+            producto_id=self.arroz.id,
+        )
+        deposito_services.crear_lote(
+            numero_lote="L-SIN-STOCK",
+            fecha_vencimiento=hoy + timedelta(days=2),
+            stock=0,
+            nombre_voluntario="Ana",
+            producto_id=self.arroz.id,
+        )
+
+        por_vencer = deposito_services.listar_lotes_por_vencer(dias=7, hoy=hoy)
+        self.assertEqual([l.id for l in por_vencer], [lote_hoy.id, lote_en_7d.id])

@@ -24,5 +24,58 @@
       "webOrigins": ["${APP_PUBLIC_URL}"],
       "attributes": { "post.logout.redirect.uris": "${APP_PUBLIC_URL}/*" }
     }
+  ],
+  "users": [
+    {
+      "username": "voluntario",
+      "enabled": true,
+      "email": "voluntario@redbarrial.local",
+      "firstName": "Voluntario",
+      "lastName": "Depósito",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "voluntario123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "voluntario_deposito"
+      ]
+    },
+    {
+      "username": "referente",
+      "enabled": true,
+      "email": "referente@redbarrial.local",
+      "firstName": "Referente",
+      "lastName": "Comedor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "referente123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "referente_comedor"
+      ]
+    },
+    {
+      "username": "coordinador",
+      "enabled": true,
+      "email": "coordinador@redbarrial.local",
+      "firstName": "Coordinador",
+      "lastName": "General",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "coordinador123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "coordinador"
+      ]
+    }
   ]
 }

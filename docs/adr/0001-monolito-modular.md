@@ -8,7 +8,7 @@
 Un depósito, 8 comedores y unos 300 movimientos por mes. Lo mantiene un voluntario con conocimientos básicos de programación, unas pocas horas por semana. No se requiere alta disponibilidad (NFR-09).
 
 ## Decisión
-Una única aplicación desplegable, organizada en módulos por carpeta: `seguridad`, `catalogo`, `inventario`, `entregas`, `reportes`, `padron` y `auditoria`. Las dependencias van en un solo sentido (`entregas` usa `inventario`, nunca al revés).
+Una única aplicación desplegable, organizada en módulos por carpeta: `seguridad`, `deposito`, `entregas`, `comedores` y `reportes`. Las dependencias van en un solo sentido (`entregas` usa `deposito`, nunca al revés).
 
 ## Alternativas consideradas
 | Alternativa | Ventajas | Desventajas |

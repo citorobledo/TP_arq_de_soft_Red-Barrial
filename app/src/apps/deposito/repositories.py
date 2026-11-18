@@ -1,5 +1,6 @@
 """Capa de acceso a datos (ORM) para Producto y Lote en el módulo Depósito."""
 
+from datetime import date
 from typing import Optional
 
 from .models import Lote, Producto
@@ -42,6 +43,15 @@ def listar(*, solo_con_stock: bool = False, producto_id: Optional[int] = None):
     if producto_id is not None:
         qs = qs.filter(producto_id=producto_id)
     return qs
+
+
+def listar_por_vencer(desde: date, hasta: date):
+    """Lista lotes con stock cuya fecha de vencimiento cae entre `desde` y `hasta`."""
+    return Lote.objects.select_related("producto").filter(
+        stock__gt=0,
+        fecha_vencimiento__gte=desde,
+        fecha_vencimiento__lte=hasta,
+    )
 
 
 def obtener_por_id(lote_id: int, *, bloquear: bool = False) -> Lote:

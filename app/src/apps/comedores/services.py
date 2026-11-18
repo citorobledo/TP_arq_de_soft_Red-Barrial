@@ -8,7 +8,11 @@ from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import transaction
+
+from apps.seguridad import services as seguridad_services
+from apps.seguridad.roles import REFERENTE_COMEDOR
 
 from . import repositories
 from .dtos import ComedorDTO
@@ -151,6 +155,13 @@ def obtener_comedor_por_codigo(codigo: str) -> ComedorDTO:
     return _to_dto(repositories.obtener_por_codigo(codigo.strip()))
 
 
+def _validar_referente(usuario_id: int) -> None:
+    if not seguridad_services.usuario_tiene_rol(usuario_id, REFERENTE_COMEDOR):
+        raise ValidationError(
+            {"usuario_id": "El usuario seleccionado no tiene el rol 'referente_comedor'."}
+        )
+
+
 # --- POST (Creación) ---
 @transaction.atomic
 def crear_comedor(
@@ -161,6 +172,7 @@ def crear_comedor(
     usuario_id: int,
 ) -> ComedorDTO:
     """Crea un nuevo comedor validando sus datos."""
+    _validar_referente(usuario_id)
     comedor = Comedor(
         nombre=nombre.strip(),
         codigo=codigo.strip(),
@@ -190,6 +202,7 @@ def actualizar_comedor(
     if direccion is not None:
         comedor.direccion = direccion.strip()
     if usuario_id is not None:
+        _validar_referente(usuario_id)
         comedor.usuario_id = usuario_id
 
     repositories.guardar(comedor)

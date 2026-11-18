@@ -22,10 +22,10 @@ def comedor(request):
     pendientes, recibidas = [], []
     for c in comedores:
         pendientes += entregas_services.listar_entregas(
-            comedor_id=c.id, estado="registrada"
+            comedor_id=c.id, estado=entregas_services.EstadoEntrega.REGISTRADA
         )
         recibidas += entregas_services.listar_entregas(
-            comedor_id=c.id, estado="confirmada"
+            comedor_id=c.id, estado=entregas_services.EstadoEntrega.CONFIRMADA
         )
     recibidas.sort(key=lambda e: e.fecha_confirmacion, reverse=True)
     hoy = timezone.localdate()
