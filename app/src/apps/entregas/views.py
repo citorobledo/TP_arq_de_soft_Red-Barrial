@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.shortcuts import redirect, render
 
@@ -42,6 +43,7 @@ def entregas(request):
                 entrega_services.actualizar_entrega(
                     entrega_id, estado=Entrega.Estado.ANULADA
                 )
+                messages.success(request, f"Entrega #{entrega_id} anulada correctamente.")
                 return redirect("entregas")
             except ObjectDoesNotExist:
                 error = "La entrega seleccionada no existe."
@@ -116,6 +118,7 @@ def nueva_entrega(request):
                 comedor_id=comedor_id,
                 detalles=detalles,
             )
+            messages.success(request, "Entrega registrada correctamente.")
             return redirect("entregas")
         except ValidationError as exc:
             error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
