@@ -128,7 +128,7 @@ utiliza para el emisor OIDC y las URLs de redirección de Keycloak. La consola
 administrativa (puerto `8081`) y el padrón simulado (puerto `8001`) permanecen
 limitados al equipo servidor.
 
-## Acceso remoto con ngrok (opcional, ADR-15)
+## Acceso remoto con ngrok (opcional, ADR-17)
 
 Permite que un referente de comedor entre desde su celular, fuera de la red del
 depósito. Es una configuración para el trabajo práctico y demostraciones, no
@@ -152,8 +152,14 @@ docker compose --profile publico up -d --build
 ```
 
 Solo se expone el puerto 8090 del proxy, con rutas permitidas (`/`, `/oidc/`,
-`/panel/`, `/referente/`, `/static/`, `/realms/`, `/resources/`); `/admin`
-responde 403 y el resto, 404. Con el acceso remoto activo, administrar Keycloak
+`/panel/`, `/comedor/`, `/deposito/`, `/entregas/`, `/coordinador/`, `/static/`,
+`/realms/`, `/resources/`); `/admin` responde 403 y el resto, 404. La API REST
+(`/api/`) no se expone por el túnel. Cada pantalla nueva debe agregarse a esa lista
+en `keycloak-proxy/nginx.conf`, o devolverá 404 desde internet.
+
+Antes de activar el modo público, reemplazá todos los valores `cambiar-esto` de
+`.env` por secretos propios: con el túnel activo, el login de Keycloak es
+alcanzable desde internet. Con el acceso remoto activo, administrar Keycloak
 también requiere el túnel levantado, porque el inicio de sesión de la consola
 usa la URL pública.
 

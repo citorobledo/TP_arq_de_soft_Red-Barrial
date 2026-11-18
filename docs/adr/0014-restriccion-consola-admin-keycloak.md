@@ -30,3 +30,4 @@ No se bloquea `/realms/master`: la consola de administración emite sus tokens p
 - El formulario de login del realm `master` sigue visible desde la red, aunque desde allí no se puede usar la consola ni la API de administración. Conviene una contraseña robusta y habilitar la detección de fuerza bruta en ese realm.
 - Si el proxy falla, tampoco funciona el login de usuarios; se acepta por NFR-09.
 - Hay que actualizar el C4 de contenedores con el nuevo `keycloak-proxy`.
+- Con el acceso remoto (ADR-17) el proxy suma una tercera entrada (puerto 8090, no publicada) y el inicio de sesión de la consola pasa por la URL pública.

@@ -6,7 +6,7 @@ versionado sigue [SemVer](https://semver.org/lang/es/) (`0.y.z` = desarrollo ini
 
 ## [Sin publicar]
 
-<!-- Antes de publicar v0.3.0: autenticación de la API REST y normalización de finales de línea. -->
+<!-- Antes de publicar v0.3.0: tests en rojo (8 en dev) y normalización de finales de línea. -->
 
 ### Added
 - Modelos y migraciones del dominio: productos y lotes, comedores, entregas y detalles de entrega.
@@ -17,9 +17,15 @@ versionado sigue [SemVer](https://semver.org/lang/es/) (`0.y.z` = desarrollo ini
 - API REST con documentación OpenAPI (Django Ninja) y errores con formato Problem Details.
 - Sincronización de los comedores con el padrón provincial al iniciar la aplicación.
 - 33 tests unitarios (CRUD y referente de comedor).
+- Acceso remoto opcional con un túnel ngrok (perfil `publico` de Compose) y lista de rutas permitidas en el proxy (ADR-17).
+- Autenticación de la API REST: exige sesión de Keycloak y rol de depósito o coordinador, con tests que verifican que toda operación lo exige.
 
 ### Changed
 - Se retira la vista `panel`; los accesos pasan a las pantallas por rol.
+- La API REST ya no acepta `estado`, `fecha_confirmacion` ni `nombre_voluntario` del cliente: el voluntario sale de la sesión y toda entrega nueva queda "registrada".
+
+### Security
+- `.env.example` vuelve a usar marcadores (`cambiar-esto`). Los secretos que estuvieron publicados (contraseña de administrador de Keycloak, secreto del cliente OIDC y clave de Django) deben rotarse.
 
 ## [0.2.0] - 2026-11-17
 
