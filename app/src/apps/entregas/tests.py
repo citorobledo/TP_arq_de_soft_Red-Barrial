@@ -233,9 +233,6 @@ class ConfirmarRecepcionTests(TestCase):
             self._confirmar(nombre="   ")
         actual = services.obtener_entrega(self.entrega.id)
         self.assertEqual(actual.estado, Entrega.Estado.REGISTRADA)
-        self.entrega.refresh_from_db()
-        self.assertEqual(self.entrega.estado, Entrega.Estado.REGISTRADA)
-
 
 class NuevaEntregaComedoresHabilitadosTests(TestCase):
     def setUp(self):
