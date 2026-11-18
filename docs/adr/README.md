@@ -19,5 +19,7 @@
 | [ADR-15](0015-arquitectura-limpia-repositorios-servicios.md) | Separación en capas de servicios y repositorios sobre el ORM | 04, 07 | Aceptado |
 | [ADR-16](0016-plantillas-vistas-por-modulo.md) | Ubicación de vistas y plantillas HTML dentro de cada módulo | 01, 04 | Aceptado |
 | [ADR-17](0017-acceso-remoto-ngrok.md) | Acceso remoto del usuario con un túnel ngrok | 08 | Propuesto |
+| [ADR-18](0018-conectividad-local-http.md) | Alcance de conectividad y transporte en modo local | 08, 09 | Aceptado |
+| [ADR-19](0019-operacion-respaldos.md) | Operación efectiva de respaldos y recuperación | 06 | Aceptado |
 
-Plantilla: [0000-plantilla.md](0000-plantilla.md). Requisitos: [../nfr.md](../nfr.md).
+Plantilla: [0000-plantilla.md](0000-plantilla.md). Requisitos: [../nfrs/nfr.md](../nfrs/nfr.md).

@@ -17,7 +17,10 @@ Dominio 1 · Banco de alimentos · Escenario 1A · Red barrial. NFR estrella: **
 ## NFRs descartados
 
 Usabilidad, observabilidad, portabilidad, rendimiento y escalabilidad. No condicionan el diseño.
-HTTPS tampoco es necesario: el sistema es local, dockerizado y sin salida al exterior.
+En el modo local se acepta HTTP dentro de una red de confianza. El proyecto no depende
+funcionalmente de Internet en ese modo, pero Docker Compose no bloquea técnicamente
+la salida de los contenedores; el modo remoto opcional usa HTTPS mediante ngrok
+(ADR-17 y ADR-18).
 
 ## Matriz NFR ↔ ADR
 
@@ -40,3 +43,5 @@ HTTPS tampoco es necesario: el sistema es local, dockerizado y sin salida al ext
 | ADR-15 Separación en capas de servicios y repositorios sobre el ORM | 04, 07 |
 | ADR-16 Ubicación de vistas y plantillas HTML dentro de cada módulo | 01, 04 |
 | ADR-17 Acceso remoto del referente con un túnel ngrok | 08 (tensiona 01, 02 y 09) |
+| ADR-18 Alcance de conectividad y transporte en modo local | 08, 09 |
+| ADR-19 Operación efectiva de respaldos y recuperación | 06 |

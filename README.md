@@ -225,6 +225,9 @@ bash scripts/restore.sh backups/AAAAMMDD-HHMMSS
 El respaldo copia SQLite en caliente y detiene Keycloak brevemente para copiar
 sus datos H2. Se conservan los últimos 14 respaldos. La restauración reemplaza
 los datos actuales, solicita confirmación y vuelve a iniciar los servicios.
+Los scripts se ejecutan manualmente; el repositorio no configura una tarea
+programada. Para cumplir el RPO de dos días, quien administra el host debe
+programar respaldos periódicos (ADR-08 y ADR-19).
 Ambos scripts detectan los volúmenes montados por la instancia Compose de este
 directorio, por lo que no dependen de que el proyecto se llame `red-barrial`.
 También aceptan `docker compose` o `docker-compose`. Antes de ejecutarlos,
@@ -238,9 +241,8 @@ iniciá los servicios desde la raíz del repositorio.
 - `keycloak-proxy/`: proxy que separa el acceso de usuarios de la consola
   administrativa.
 - `scripts/`: respaldo y restauración de los datos.
-- `docs/nfr.md`: requisitos no funcionales objetivo.
+- `docs/nfrs/nfr.md`: requisitos no funcionales objetivo.
 - `docs/adr/`: índice de decisiones y ADRs disponibles.
 
-El índice de ADRs incluye decisiones planificadas que todavía no están
-presentes como archivos. En el repositorio actual están los ADR-07, ADR-09 y
-ADR-14, además de la plantilla.
+El índice de [ADRs](docs/adr/README.md) contiene las decisiones documentadas,
+incluidas las que precisan decisiones anteriores sin reemplazar sus archivos.
