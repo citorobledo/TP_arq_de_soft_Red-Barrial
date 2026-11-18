@@ -4,21 +4,21 @@
 |---|---|---|---|
 | [ADR-01](0001-monolito-modular.md) | Monolito modular | 01, 02, 04, 09 | Aceptado |
 | [ADR-02](0002-sqlite-wal.md) | SQLite en modo WAL | 01, 02, 06, 07 | Aceptado |
-| [ADR-03](0003-ledger-append-only-fefo.md) | Ledger append-only con FEFO | 03, 07 | Propuesto |
+| [ADR-03](0003-ledger-append-only-fefo.md) | Ledger append-only con FEFO | 03, 07 | Aceptado |
 | [ADR-04](0004-padron-adaptador-cache.md) | Padrón: adaptador, timeout y caché | 03, 05 | Propuesto |
 | [ADR-05](0005-ui-renderizada-en-servidor.md) | UI renderizada en servidor | 01, 02, 04 | Aceptado |
 | [ADR-06](0006-python-django.md) | Python + Django | 02, 04 | Aceptado |
 | [ADR-07](0007-docker-compose.md) | Docker Compose | 01, 09 | Aceptado |
-| [ADR-08](0008-backup-recuperacion.md) | Backup y recuperación | 01, 06 | Propuesto |
+| [ADR-08](0008-backup-recuperacion.md) | Backup y recuperación | 01, 06 | Aceptado |
 | [ADR-09](0009-oidc-keycloak.md) | Autenticación OIDC con Keycloak | 08 | Aceptado |
-| [ADR-10](0010-auditoria.md) | Auditoría: anulación lógica + log | 03 | Propuesto |
+| [ADR-10](0010-auditoria.md) | Auditoría: anulación lógica + log | 03 | Aceptado |
 | [ADR-11](0011-confirmacion-estados-idempotencia.md) | Confirmación por estados e idempotencia | 03, 07 | Propuesto |
 | [ADR-12](0012-padron-mock.md) | padron-mock como servicio simulado | 04, 05 | Aceptado |
-| [ADR-13](0013-reglas-negocio-servicios-tests.md) | Reglas de negocio en servicios con tests | 04, 07 | Propuesto |
-| [ADR-14](0014-restriccion-consola-admin-keycloak.md) | Restricción de la consola de administración de Keycloak | 08 | Propuesto |
+| [ADR-13](0013-reglas-negocio-servicios-tests.md) | Reglas de negocio en servicios con tests | 04, 07 | Aceptado |
+| [ADR-14](0014-restriccion-consola-admin-keycloak.md) | Restricción de la consola de administración de Keycloak | 08 | Aceptado |
 | [ADR-15](0015-arquitectura-limpia-repositorios-servicios.md) | Separación en capas de servicios y repositorios sobre el ORM | 04, 07 | Aceptado |
 | [ADR-16](0016-plantillas-vistas-por-modulo.md) | Ubicación de vistas y plantillas HTML dentro de cada módulo | 01, 04 | Aceptado |
-| [ADR-17](0017-acceso-remoto-ngrok.md) | Acceso remoto del usuario con un túnel ngrok | 08 | Propuesto |
+| [ADR-17](0017-acceso-remoto-ngrok.md) | Acceso remoto del usuario con un túnel ngrok | 08 | Aceptado |
 | [ADR-18](0018-conectividad-local-http.md) | Alcance de conectividad y transporte en modo local | 08, 09 | Aceptado |
 | [ADR-19](0019-operacion-respaldos.md) | Operación efectiva de respaldos y recuperación | 06 | Aceptado |
 
