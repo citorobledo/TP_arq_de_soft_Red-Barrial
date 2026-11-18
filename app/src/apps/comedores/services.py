@@ -129,9 +129,16 @@ def sincronizar_comedores_padron() -> dict[str, int]:
 
 
 # --- GET (Lectura) ---
-def listar_comedores(*, usuario_id: Optional[int] = None) -> list[ComedorDTO]:
-    """Lista comedores con filtro opcional por usuario referente."""
-    return [_to_dto(c) for c in repositories.listar(usuario_id=usuario_id)]
+def listar_comedores(
+    *,
+    usuario_id: Optional[int] = None,
+    habilitado: Optional[bool] = None,
+) -> list[ComedorDTO]:
+    """Lista comedores con filtros opcionales por referente y habilitación."""
+    return [
+        _to_dto(c)
+        for c in repositories.listar(usuario_id=usuario_id, habilitado=habilitado)
+    ]
 
 
 def obtener_comedor(comedor_id: int) -> ComedorDTO:
