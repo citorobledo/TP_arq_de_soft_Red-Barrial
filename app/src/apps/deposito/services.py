@@ -133,6 +133,8 @@ def crear_lote(
     fecha_ingreso: Optional[date] = None,
 ) -> LoteDTO:
     """Crea un nuevo lote validando sus reglas de negocio."""
+    if stock is not None and stock < 0:
+        raise ValidationError({"stock": "El stock del lote debe ser mayor o igual a cero."})
     lote = Lote(
         numero_lote=numero_lote.strip(),
         fecha_vencimiento=fecha_vencimiento,
@@ -160,6 +162,8 @@ def actualizar_lote(
     producto_id: Optional[int] = None,
 ) -> LoteDTO:
     """Actualiza los campos provistos de un lote existente."""
+    if stock is not None and stock < 0:
+            raise ValidationError({"stock": "El stock del lote debe ser mayor o igual a cero."})
     lote = repositories.obtener_por_id(lote_id, bloquear=True)
     if numero_lote is not None:
         lote.numero_lote = numero_lote.strip()
