@@ -45,3 +45,4 @@ la salida de los contenedores; el modo remoto opcional usa HTTPS mediante ngrok
 | ADR-17 Acceso remoto del referente con un túnel ngrok | 08 (tensiona 01, 02 y 09) |
 | ADR-18 Alcance de conectividad y transporte en modo local | 08, 09 |
 | ADR-19 Operación efectiva de respaldos y recuperación | 06 |
+| ADR-20 Autenticación de administración de Keycloak solo local | 08 |

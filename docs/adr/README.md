@@ -21,5 +21,6 @@
 | [ADR-17](0017-acceso-remoto-ngrok.md) | Acceso remoto del usuario con un túnel ngrok | 08 | Aceptado |
 | [ADR-18](0018-conectividad-local-http.md) | Alcance de conectividad y transporte en modo local | 08, 09 | Aceptado |
 | [ADR-19](0019-operacion-respaldos.md) | Operación efectiva de respaldos y recuperación | 06 | Aceptado |
+| [ADR-20](0020-acceso-admin-solo-local.md) | Autenticación de administración de Keycloak solo local | 08 | Aceptado |
 
 Plantilla: [0000-plantilla.md](0000-plantilla.md). Requisitos: [../nfrs/nfr.md](../nfrs/nfr.md).

@@ -90,7 +90,7 @@ salvo que se quieran eliminar también esos datos.
 | Panel de coordinador | http://localhost:8000/cordinador/ | sesion iniciada con el rol; muestra coordinador ve todo el movimiento,prontos a vencer y exporta reportes |
 | Retorno OIDC | http://localhost:8000/oidc/callback/ | URL de retorno de Keycloak; no abrir manualmente |
 | Cierre de sesión OIDC | http://localhost:8000/oidc/logout/ | Se envía mediante el formulario de cierre de sesión de la aplicación |
-| Consola de administración de Keycloak | http://localhost:8081/admin/ | Sólo accesible desde la computadora que ejecuta Docker; credenciales de administrador de `.env` |
+| Consola de administración de Keycloak | http://localhost:8081/admin/ | Solo accesible desde la computadora que ejecuta Docker; autenticación del realm `master` local |
 | Cuenta del realm en Keycloak | http://localhost:8080/realms/red-barrial/account/ | Acceso a la cuenta del usuario del realm |
 | Configuración OIDC del realm | http://localhost:8080/realms/red-barrial/.well-known/openid-configuration | Documento JSON para comprobar que el realm responde |
 | Swagger UI del padrón simulado | http://localhost:8001/docs | Sólo accesible desde la computadora que ejecuta Docker |
@@ -161,7 +161,8 @@ docker compose --profile publico up -d --build
 
 Solo se expone el puerto 8090 del proxy, con rutas permitidas (`/`, `/oidc/`,
 `/panel/`, `/comedor/`, `/deposito/`, `/entregas/`, `/coordinador/`, `/static/`,
-`/realms/`, `/resources/`); `/admin` responde 403 y el resto, 404. La API REST
+`/realms/` excepto `/realms/master`, `/resources/`); `/admin` y `/realms/master`
+responden 403 y el resto, 404. La API REST
 (`/api/`) no se expone por el túnel. Cada pantalla nueva debe agregarse a esa lista
 en `keycloak-proxy/nginx.conf`, o devolverá 404 desde internet.
 

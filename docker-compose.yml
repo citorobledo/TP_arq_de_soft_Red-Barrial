@@ -44,10 +44,33 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  keycloak-admin-realm-config:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.0}
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        /opt/keycloak/bin/kcadm.sh config credentials \
+          --server http://keycloak:8080 \
+          --realm master \
+          --user "$${KC_BOOTSTRAP_ADMIN_USERNAME}" \
+          --password "$${KC_BOOTSTRAP_ADMIN_PASSWORD}"
+        /opt/keycloak/bin/kcadm.sh update realms/master \
+          -s "attributes.frontendUrl=http://localhost:8081"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?definir KEYCLOAK_ADMIN_PASSWORD en .env}
+    restart: "no"
+
   keycloak-proxy:
     image: nginx:1.27-alpine
     depends_on:
-      - keycloak
+      keycloak:
+        condition: service_healthy
+      keycloak-admin-realm-config:
+        condition: service_completed_successfully
     ports:
       - "8080:8080"             # login de usuarios (red local); /admin bloqueado
       - "127.0.0.1:8081:8081"   # consola de administración (solo en el servidor)
