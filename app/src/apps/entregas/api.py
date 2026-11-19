@@ -38,7 +38,6 @@ class EntregaIn(Schema):
     # El voluntario sale de la sesión y el estado inicial es siempre "registrada".
     fecha: date
     comedor_id: int
-    estado: str = services.EstadoEntrega.REGISTRADA
     detalles: Optional[list[DetalleEntregaItemIn]] = None
 
 

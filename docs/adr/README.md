@@ -22,5 +22,6 @@
 | [ADR-18](0018-conectividad-local-http.md) | Alcance de conectividad y transporte en modo local | 08, 09 | Aceptado |
 | [ADR-19](0019-operacion-respaldos.md) | Operación efectiva de respaldos y recuperación | 06 | Aceptado |
 | [ADR-20](0020-acceso-admin-solo-local.md) | Autenticación de administración de Keycloak solo local | 08 | Aceptado |
+| [ADR-21](0021-cobertura-actual-de-tests.md) | Cobertura actual de pruebas de reglas de negocio | 04, 07 | Aceptado |
 
 Plantilla: [0000-plantilla.md](0000-plantilla.md). Requisitos: [../nfrs/nfr.md](../nfrs/nfr.md).

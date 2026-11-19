@@ -46,3 +46,4 @@ la salida de los contenedores; el modo remoto opcional usa HTTPS mediante ngrok
 | ADR-18 Alcance de conectividad y transporte en modo local | 08, 09 |
 | ADR-19 Operación efectiva de respaldos y recuperación | 06 |
 | ADR-20 Autenticación de administración de Keycloak solo local | 08 |
+| ADR-21 Cobertura actual de pruebas de reglas de negocio | 04, 07 |
